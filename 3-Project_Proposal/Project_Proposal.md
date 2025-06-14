@@ -46,4 +46,4 @@ date: "2025‑06‑14"
    - If Suspicious = REJECT → DO NOT forward to RAG model and log in `log.json` for security
 4. **Response to user**:
    - If **REJECTED**: "Unsafe request detected."
-   - If **PASSED**: "Here’s some safe and ethical guidance."
+   - If **PASSED**: "Here's some safe and ethical guidance."
