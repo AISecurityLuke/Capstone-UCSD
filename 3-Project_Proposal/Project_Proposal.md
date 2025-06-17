@@ -16,7 +16,7 @@ date: "2025‑06‑14"
 
 ## 2. Classification Pipeline
 
-### Step 1: Initialize Multi-Class Classification Model & Configureable Sensitivity
+### Step 1: Initialize Multi-Class Classification Model & Configurable Sensitivity
 
 - Define `classification_model = Model()`
 - Model returns scoring for Safe, Suspicious, and Malicious prompts.
