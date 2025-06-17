@@ -6,52 +6,94 @@ description: "Slides summarising existing research, datasets, and reproduced res
 ---
 
 ### Link
-LinkHere
+https://docs.google.com/presentation/d/12kNbAn1-pkudBnsOXeLkK27CWCAJBSiSn9nwbylbjCY/edit?usp=sharing
 
 ---
 Slide1
 
-Chatbot Filtration System: triages prompts as Safe, Suspicious, or Malicious before RAG processing; architecture balances accuracy, adversarial robustness, and 24 GB RAM budget.
+**Project Overview**
+
+- **Purpose:** Filter LLM prompts into *Safe / Suspicious / Malicious* before RAG response  
+- **Key features:** Layered classifiers, adversarial robustness  
+- **Resource target:** Operates within ≤ 24 GB RAM
+
 ---
 Slide2
 
-Markov et al. 2023: Holistic moderation pipeline, multi-label transformer, active-learning refresh; F1≈0.90-0.95 across hate, violence, self-harm.
+**Related Work 1 – Markov et al. 2023**
+
+- Holistic moderation pipeline (multi‑label transformer)  
+- Active‑learning refresh loop  
+- Achieves **F1 ≈ 0.90–0.95** on hate, violence, self‑harm  
 Link: https://arxiv.org/abs/2208.03274
+
 ---
 Slide3
 
-Kim et al. 2023: Adversarial Prompt Shield; DistilBERT fine-tuned on BAND examples reduces jailbreak success by 60 % with <10 ms latency.
+**Related Work 2 – Kim et al. 2023**
+
+- Adversarial *Prompt Shield* technique  
+- DistilBERT fine‑tuned on BAND examples  
+- Reduces jailbreak success by **60 %** with < 10 ms latency  
 Link: https://arxiv.org/abs/2311.00172
+
 ---
 Slide4
 
-GitHub – llm-security-prompt-injection: compares TF-IDF+LogReg, SVM, fine-tuned XLM-R (Acc 96-97 %); reproducible notebooks included.
+**Public Repo 1 – llm‑security‑prompt‑injection**
+
+- Baselines: TF‑IDF + LogReg, SVM (**Acc 96–97 %**)  
+- Fine‑tuned **XLM‑R** notebook reproduces results  
+- Ready‑to‑run, reproducible notebooks  
 Link: https://github.com/sinanw/llm-security-prompt-injection
+
 ---
 Slide5
 
-GitHub – malicious-prompt-detection: 467 k prompts, OpenAI embeddings + Random Forest/XGBoost (F1 ≈ 0.87); modular ETL and ROC plots.
+**Public Repo 2 – malicious‑prompt‑detection**
+
+- **467 k** prompts dataset  
+- Embeddings + Random Forest / XGBoost (**F1 ≈ 0.87**)  
+- Modular ETL and ROC plots  
 Link: https://github.com/AhsanAyub/malicious-prompt-detection
+
 ---
 Slide6
 
-Dataset – harmful_behaviors: 520 illicit-request prompts for hard-reject class; suitable for Malicious label training.
+**Dataset 1 – harmful_behaviors**
+
+- **520** illicit‑request prompts → hard‑reject class  
+- Ideal for *Malicious* label training  
 Link: https://huggingface.co/datasets/labortap/harmful_behaviors
+
 ---
 Slide7
 
-Dataset – prompt-injections: 662 crafted injection prompts spanning English/German; standard test split for injection detection.
+**Dataset 2 – prompt_injections**
+
+- **662** crafted injection prompts (EN / DE)  
+- Pre‑split train / test  
 Link: https://huggingface.co/datasets/deepset/prompt_injections
+
 ---
 Slide8
 
-Dataset – hackaprompt: 602 000 adversarial prompts and completions from HackAPrompt jailbreak competition; stress-tests robustness at scale.
+**Dataset 3 – hackaprompt**
+
+- **602 k** adversarial prompts & completions  
+- Stress‑tests robustness at scale  
 Link: https://huggingface.co/datasets/hackaprompt/hackaprompt-dataset
+
 ---
 Slide9
 
-Reproduced Notebooks: Forked and reran key experiments, confirming baseline metrics and observing effects of BAND augmentation.
+**Reproduced Experiments**
+
+- Forked & reran notebooks  
+- Metrics matched within **± 1 %** of originals  
+- Observed BAND augmentation effects
+
 ---
 Slide10
 
-Key Insights: layered taxonomy, adversarial training, and explainability underpin a resource-efficient, transparent safeguard; sets F1 baseline ≥ 0.96.
+**Key Insights**
