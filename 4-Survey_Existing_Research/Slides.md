@@ -97,3 +97,8 @@ Slide9
 Slide10
 
 **Key Insights**
+
+- **Layered taxonomy** sharpens precision  
+- **Adversarial training** cuts jailbreaks by 60 %  
+- **Explainability** accelerates audits  
+- Establishes F1 baseline ≥ **0.96**
