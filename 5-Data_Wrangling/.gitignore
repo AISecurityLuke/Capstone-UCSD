@@ -1,0 +1,10 @@
+# Ignore parquet and other large data files
+*.parquet
+*.csv
+*.tsv
+*.xlsx
+*.xls
+*.zip
+*.tar.gz
+*.7z
+*.rar 
