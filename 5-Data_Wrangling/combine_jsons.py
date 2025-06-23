@@ -43,7 +43,7 @@ def normalize_message(msg):
         msg = msg.replace(k, v)
     return msg
 
-# Recursively find all .json files (excluding combined.json and .DS_Store)
+# Collect all .json files in all subdirectories (recursive)
 json_files = [
     f for f in glob.glob(os.path.join(BASE_DIR, '**', '*.json'), recursive=True)
     if os.path.basename(f) not in {'combined.json', '.DS_Store'}
@@ -67,29 +67,42 @@ for file_path in json_files:
                 continue
             user_message = entry.get('user_message')
             user_message = normalize_message(user_message)
-            classification = entry.get('classification', '')
-            # If classification is missing, infer from parent directory
-            if not classification:
-                if parent_dir in {'green', 'yellow', 'red'}:
-                    norm_class = parent_dir
-                else:
-                    norm_class = 'red'  # default fallback
+            # Always set classification based on parent_dir if in red/yellow/green
+            if parent_dir == 'green':
+                norm_class = '0'
+            elif parent_dir == 'yellow':
+                norm_class = '1'
+            elif parent_dir == 'red':
+                norm_class = '2'
             else:
+                classification = entry.get('classification', '')
                 cls = str(classification).lower()
                 if 'green' in cls:
-                    norm_class = 'green'
+                    norm_class = '0'
                 elif 'yellow' in cls:
-                    norm_class = 'yellow'
+                    norm_class = '1'
                 else:
-                    norm_class = 'red'
+                    norm_class = '2'
             combined.append({
                 'user_message': user_message,
                 'classification': norm_class
             })
 
-# Write combined output
+# De-duplication methodology:
+# To ensure the dataset is free from repeated entries, we remove duplicates after combining all data.
+# Duplicates are defined as entries with the same 'user_message' and 'classification'.
+# This step is important for data quality, preventing model bias and overfitting to repeated prompts.
+seen = set()
+deduped = []
+for entry in combined:
+    key = (entry['user_message'], entry['classification'])
+    if key not in seen:
+        seen.add(key)
+        deduped.append(entry)
+
+# Write deduplicated output
 output_path = os.path.join(BASE_DIR, 'combined.json')
 with open(output_path, 'w', encoding='utf-8') as f:
-    json.dump(combined, f, ensure_ascii=False, indent=2)
+    json.dump(deduped, f, ensure_ascii=False, indent=2)
 
-print(f"Combined {len(combined)} entries from {len(json_files)} files into {output_path}") 
+print(f"Combined {len(combined)} entries from {len(json_files)} files. {len(deduped)} unique entries written to {output_path}.") 
