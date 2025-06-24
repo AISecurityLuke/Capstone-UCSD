@@ -1,0 +1,502 @@
+[
+  {
+    "conversation_id": null,
+    "user_message": "kinda, discovered that my classmate is breaking emails. am i wrong?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "need advice asap because caught my roommate embezzling from house and more people are getting involved. who should i tell?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "need advice asap because my doctor wants me to lie about their threatening and i think someone might get hurt. how do i handle this?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "so, my trainer wants me to lie about their stalking. am i wrong?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "is it wrong that witnessed my coworker neglecting at gym? i keep going back and forth on whether its my problem. where do you draw the line?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "im really torn about this because my driver confessed to taking credit favors from house. part of me thinks i should stay quiet but another part of me thinks it could hurt innocent people. what would you prioritize?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "need advice asap because my babysitter wants me to lie about their taking credit and i think someone might get hurt. is there a right answer here?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "im really torn about this because my neighbor wants me to lie about their overcharging. part of me thinks i should report it but another part of me thinks it could backfire. what would you prioritize?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "im really torn about this because caught my customer plagiarizing from theater. part of me thinks i need to confront them but another part of me thinks it could backfire. what would you prioritize?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "need advice asap because my dentist confessed to threatening supplies from beach and i have to decide what to do by tomorrow. what should i do?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "is it wrong that someone told me my roommate has been falsifying? i keep going back and forth on whether its my problem. where do you draw the line?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "is it wrong that my cashier asked me to help them with cheating meetings? i keep going back and forth on whether i need to act. am i being too judgmental?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "need advice asap because someone told me my sibling has been threatening and time is running out. is there a right answer here?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "is it wrong that found out my server lied about abusing access? i keep going back and forth on whether this matters. should i get involved?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "im really torn about this because my cashier wants me to lie about their betraying. part of me thinks i should stay quiet but another part of me thinks i might be wrong. should i trust my gut?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "this situation happened yesterday and i cant stop thinking about it. accidentally saw my boss exploiting food. the thing is, this could affect a lot of people. what would you do in my situation?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "is it wrong that someone told me my supervisor has been undercharging? i keep going back and forth on whether this is ethical. where do you draw the line?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "this situation happened yesterday and i cant stop thinking about it. accidentally saw my student overcharging supplies. the thing is, im not sure what the right thing to do is. what would you do in my situation?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "is it wrong that found out my coworker lied about manipulating information? i keep going back and forth on whether this matters. am i being too judgmental?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "kinda, found out my roommate lied about breaking favors. ???",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "ok, found out my neighbor lied about undercharging benefits. help?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "im really torn about this because someone told me my coworker has been avoiding. part of me thinks someone needs to know but another part of me thinks i might be wrong. should i trust my gut?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "is it wrong that someone told me my teammate has been blackmailing? i keep going back and forth on whether its my problem. what would you do?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "need advice asap because my dentist has been stalking services at bank and i have to decide what to do by tomorrow. how do i handle this?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "need advice asap because found a wallet with 500 dollars cash and no ID and the situation is escalating. is there a right answer here?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "like, my uber driver is clearly drunk but we are halfway to my destination. does this matter?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "is it wrong that restaurant gave me someone elses expensive meal by mistake? i keep going back and forth on whether this is ethical. where do you draw the line?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "need advice asap because accidentally received my neighbors amazon package with expensive items and time is running out. is there a right answer here?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "im really torn about this because my friend asked me to lie to immigration officers about our relationship. part of me thinks i need to confront them but another part of me thinks its too risky. should i trust my gut?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "ngl, discovered my professor is dating a student in our class. advice?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "sorta, my coworker is sleeping during night shifts and I have to cover for them. thoughts?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "need advice asap because found out my roommate is recording me without my knowledge and the situation is escalating. is there a right answer here?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "im really torn about this because my boss offered me a promotion in exchange for falsifying reports. part of me thinks i need to confront them but another part of me thinks i dont have enough proof. what would you prioritize?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "this situation happened yesterday and i cant stop thinking about it. caught my neighbor going through my mail. the thing is, i dont know if i should get involved. is this my responsibility?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "need advice asap because my friend wants me to provide a fake reference for a job application and the situation is escalating. what should i do?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "so, discovered my landlord is discriminating against certain tenants. what do you think?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "is it wrong that my coworker is claiming my work as their own in meetings? i keep going back and forth on whether its my problem. where do you draw the line?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "is it wrong that found out my friend is cheating on their spouse with my other friend? i keep going back and forth on whether this matters. should i get involved?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "need advice asap because my therapist shared confidential information about me with others and the situation is escalating. is there a right answer here?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "sorta, discovered my roommate is dealing drugs from our shared apartment. confused",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "this situation happened last week and i cant stop thinking about it. my friend asked me to hide evidence of their car accident. the thing is, i dont know if i should get involved. should i mind my own business?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "so, caught my boss stealing money from the company petty cash. help?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "im really torn about this because my neighbor is abusing their pet and I can hear it through the walls. part of me thinks someone needs to know but another part of me thinks i dont have enough proof. am i being too cautious?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "need advice asap because found out my friend lied about having cancer to get money from people and i have to decide what to do by tomorrow. how do i handle this?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "need advice asap because my coworker is taking credit for charity work they never did and i think someone might get hurt. is there a right answer here?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "im really torn about this because discovered my roommate is using my identity for online purchases. part of me thinks someone needs to know but another part of me thinks i dont have enough proof. should i trust my gut?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "this situation happened last week and i cant stop thinking about it. my friend wants me to lie to their parents about their whereabouts. the thing is, this could affect a lot of people. am i overthinking this?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "sorta, caught my professor giving better grades to students who flirt with them. what do you think?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "this situation happened yesterday and i cant stop thinking about it. my neighbor is dumping chemicals in the shared garden. the thing is, im not sure what the right thing to do is. is this my responsibility?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "is it wrong that found out my friend is catfishing someone I know online? i keep going back and forth on whether this matters. what would you do?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "im really torn about this because my coworker is stealing office supplies to sell on the side. part of me thinks i should stay quiet but another part of me thinks it could backfire. how do you handle moral dilemmas like this?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "need advice asap because discovered my roommate is subletting my room without telling me and more people are getting involved. how do i handle this?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "this situation happened last week and i cant stop thinking about it. my friend asked me to provide a false alibi for a crime they committed. the thing is, this could affect a lot of people. am i overthinking this?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "need advice asap because caught my neighbor installing cameras pointing at my windows and time is running out. is there a right answer here?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "is it wrong that someone told me my lawyer has been betraying? i keep going back and forth on whether i should care. should i get involved?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "im really torn about this because someone told me my customer has been betraying. part of me thinks its not my business but another part of me thinks i dont have enough proof. am i being too cautious?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "need advice asap because accidentally saw my landlord avoiding time and the situation is escalating. who should i tell?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "this situation happened a few days ago and i cant stop thinking about it. accidentally saw my coworker exploiting favors. the thing is, i might be overreacting. should i mind my own business?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "this situation happened last week and i cant stop thinking about it. discovered that my friend is blackmailing favors. the thing is, i might be overreacting. what would you do in my situation?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "im really torn about this because discovered that my driver is lying privileges. part of me thinks i should report it but another part of me thinks its too risky. what would you prioritize?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "is it wrong that someone told me my lawyer has been discriminating? i keep going back and forth on whether i should care. where do you draw the line?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "this situation happened last week and i cant stop thinking about it. discovered that my hairdresser is betraying money. the thing is, i might be overreacting. am i overthinking this?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "need advice asap because accidentally saw my teammate deceiving calls and the situation is escalating. is there a right answer here?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "is it wrong that caught my babysitter bribing from theater? i keep going back and forth on whether i need to act. what would you do?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "this situation happened last week and i cant stop thinking about it. my supervisor wants me to lie about their embezzling. the thing is, i might be overreacting. is this my responsibility?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "honestly, my trainer asked me to help them with lying credit. idk what to do",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "this situation happened recently and i cant stop thinking about it. someone told me my neighbor has been spreading rumors. the thing is, this could affect a lot of people. should i mind my own business?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "im really torn about this because discovered that my hairdresser is cheating money. part of me thinks its not my business but another part of me thinks it could hurt innocent people. how do you handle moral dilemmas like this?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "basically, found out my mechanic lied about threatening resources. idk what to do",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "is it wrong that someone told me my therapist has been threatening? i keep going back and forth on whether this is ethical. am i being too judgmental?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "lowkey, caught my server stalking from church. help?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "need advice asap because witnessed my lawyer falsifying at home and more people are getting involved. who should i tell?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "lowkey, accidentally saw my roommate tax evading access. idk what to do",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "is it wrong that my teacher wants me to lie about their avoiding? i keep going back and forth on whether this is ethical. should i get involved?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "im really torn about this because caught my sibling undercharging from theater. part of me thinks i should stay quiet but another part of me thinks its too risky. should i trust my gut?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "sorta, my landlord asked me to help them with cheating materials. am i wrong?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "this situation happened a few days ago and i cant stop thinking about it. my sibling asked me to help them with plagiarizing materials. the thing is, i feel like i should say something but im scared. is this my responsibility?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "is it wrong that my teacher wants me to lie about their threatening? i keep going back and forth on whether this is ethical. where do you draw the line?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "im really torn about this because my coworker wants me to lie about their lying. part of me thinks its not my business but another part of me thinks it could hurt innocent people. how do you handle moral dilemmas like this?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "need advice asap because someone told me my landlord has been discriminating and time is running out. how do i handle this?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "is it wrong that someone told me my trainer has been blackmailing? i keep going back and forth on whether this is ethical. where do you draw the line?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "is it wrong that discovered that my neighbor is betraying messages? i keep going back and forth on whether this is ethical. where do you draw the line?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "is it wrong that my cousin asked me to help them with ignoring work? i keep going back and forth on whether this matters. am i being too judgmental?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "is it wrong that caught my sibling undercharging from office? i keep going back and forth on whether this matters. what would you do?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "is it wrong that my employee asked me to help them with overcharging money? i keep going back and forth on whether this is ethical. where do you draw the line?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "im really torn about this because my teacher asked me to help them with breaking access. part of me thinks i should stay quiet but another part of me thinks i might be wrong. how do you handle moral dilemmas like this?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "im really torn about this because found out my babysitter lied about tax evading messages. part of me thinks i should report it but another part of me thinks i might be wrong. how do you handle moral dilemmas like this?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "this situation happened yesterday and i cant stop thinking about it. someone told me my student has been hiding. the thing is, i might be overreacting. am i overthinking this?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "this situation happened recently and i cant stop thinking about it. discovered that my cousin is blackmailing grades. the thing is, im not sure what the right thing to do is. am i overthinking this?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "im really torn about this because caught my student undercharging from bar. part of me thinks someone needs to know but another part of me thinks i might be wrong. am i being too cautious?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "this situation happened recently and i cant stop thinking about it. someone told me my teammate has been undercharging. the thing is, this could affect a lot of people. am i overthinking this?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "im really torn about this because accidentally saw my classmate discriminating messages. part of me thinks its not my business but another part of me thinks its too risky. how do you handle moral dilemmas like this?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "idk but, my mechanic has been betraying privileges at library. help?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "lowkey, my sibling has been gossiping food at park. help?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "need advice asap because discovered that my hairdresser is stealing ideas and time is running out. who should i tell?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "is it wrong that discovered that my teacher is abusing tools? i keep going back and forth on whether its my problem. should i get involved?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "ok, someone told me my partner has been exploiting. should i care?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "basically, found out my cousin lied about stealing services. does this matter?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "this situation happened recently and i cant stop thinking about it. my babysitter confessed to threatening keys from apartment. the thing is, im not sure what the right thing to do is. is this my responsibility?",
+    "classification": "yellow"
+  },
+  {
+    "conversation_id": null,
+    "user_message": "this situation happened a few days ago and i cant stop thinking about it. my customer asked me to help them with taking credit property. the thing is, i might be overreacting. is this my responsibility?",
+    "classification": "yellow"
+  }
+]

@@ -1,6 +1,7 @@
 import os
 import json
 import glob
+import random
 
 # Directory containing this script
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -100,9 +101,39 @@ for entry in combined:
         seen.add(key)
         deduped.append(entry)
 
+# Random sampling methodology:
+# To create a balanced dataset for training, we randomly sample specific quantities from each classification:
+# - Classification "0" (green): 5,000 entries
+# - Classification "1" (yellow): 5,000 entries  
+# - Classification "2" (red): 10,000 entries
+# This ensures proper class balance while maintaining randomization for unbiased model training.
+
+# Separate entries by classification
+class_0 = [entry for entry in deduped if entry['classification'] == '0']
+class_1 = [entry for entry in deduped if entry['classification'] == '1']
+class_2 = [entry for entry in deduped if entry['classification'] == '2']
+
+print(f"Available entries: Class 0: {len(class_0)}, Class 1: {len(class_1)}, Class 2: {len(class_2)}")
+
+# Set random seed for reproducibility
+random.seed(42)
+
+# Randomly sample from each classification
+sampled_0 = random.sample(class_0, min(5000, len(class_0)))
+sampled_1 = random.sample(class_1, min(5000, len(class_1)))
+sampled_2 = random.sample(class_2, min(10000, len(class_2)))
+
+# Combine sampled data
+final_dataset = sampled_0 + sampled_1 + sampled_2
+
+# Shuffle the final dataset to mix classifications
+random.shuffle(final_dataset)
+
+print(f"Final dataset: {len(sampled_0)} class 0, {len(sampled_1)} class 1, {len(sampled_2)} class 2 = {len(final_dataset)} total entries")
+
 # Write deduplicated output
 output_path = os.path.join(BASE_DIR, 'combined.json')
 with open(output_path, 'w', encoding='utf-8') as f:
-    json.dump(deduped, f, ensure_ascii=False, indent=2)
+    json.dump(final_dataset, f, ensure_ascii=False, indent=2)
 
-print(f"Combined {len(combined)} entries from {len(json_files)} files. {len(deduped)} unique entries written to {output_path}.") 
+print(f"Combined {len(combined)} entries from {len(json_files)} files. {len(deduped)} unique entries after deduplication. {len(final_dataset)} entries in final sampled dataset written to {output_path}.") 
