@@ -119,9 +119,9 @@ print(f"Available entries: Class 0: {len(class_0)}, Class 1: {len(class_1)}, Cla
 random.seed(42)
 
 # Randomly sample from each classification
-sampled_0 = random.sample(class_0, min(5000, len(class_0)))
-sampled_1 = random.sample(class_1, min(5000, len(class_1)))
-sampled_2 = random.sample(class_2, min(10000, len(class_2)))
+sampled_0 = random.sample(class_0, min(4000, len(class_0)))
+sampled_1 = random.sample(class_1, min(4000, len(class_1)))
+sampled_2 = random.sample(class_2, min(8000, len(class_2)))
 
 # Combine sampled data
 final_dataset = sampled_0 + sampled_1 + sampled_2

@@ -14,20 +14,19 @@ This directory contains the primary datasets used for model training and evaluat
 
 **Random Sampling Methodology:**
 The `combine_jsons.py` script implements balanced random sampling to create optimal training datasets:
-- **Classification "0" (Green/Safe)**: 5,000 randomly selected entries
-- **Classification "1" (Yellow/Morally Gray)**: 5,000 randomly selected entries  
-- **Classification "2" (Red/Harmful)**: 10,000 randomly selected entries
-- **Total**: 20,000 entries with reproducible randomization (seed=42)
+- **Classification "0" (Green/Safe)**: 4,000 randomly selected entries
+- **Classification "1" (Yellow/Morally Gray)**: 4,000 randomly selected entries  
+- **Classification "2" (Red/Harmful)**: 8,000 randomly selected entries
+- **Total**: 16,000 entries with reproducible randomization (seed=42)
 
-**Current Dataset Statistics:**
-- **Combined Dataset**: 20,000 entries in `combined.json`
-- **Morally Gray Prompts**: 4,869 entries across 50 files
-- **Word Length Range**: 8-346 words per prompt
-- **Length Distribution**: 25.8% short (8-25 words), 52.7% medium (26-80 words), 21.5% long (81+ words)
-- **Target Compliance**: 90.3% of prompts within 8-322 word target range
+**Current Dataset:**
+- **Combined Dataset**: 16,000 entries in `combined.json`
 
 **File Structure:**
-- `combined.json`: Final balanced dataset with random sampling
-- `FINAL_DATA_combined.json`: Alternative combined dataset version
+- `combined.json`: Final balanced dataset with random sampling (16,000 entries)
+- `combine_jsons.py`: Script for combining and sampling datasets
+- `process_json.py`: Script for normalizing and cleaning data
 - `yellow/yel_copy1.json` through `yellow/yel_copy50.json`: Individual morally gray prompt files
 - `yellow/YELclaude_set1.json`, `yellow/YELclaude_set2.json`: Dataset organization files
+- `green/GRE_Human_5387.json`, `green/GREchatgpt.json`: Cleaned green/safe prompts
+- `red/hackaprompt.json`, `red/inject.json`, `red/red.json`: Red/harmful prompts (cleaned of repetitive patterns)
