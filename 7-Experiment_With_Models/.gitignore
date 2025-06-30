@@ -63,17 +63,17 @@ models/*/vocab.txt
 models/*/model.safetensors
 
 # Results and outputs
+# Ignore only images in results, but keep all other files (including .py, .csv, etc.)
 results/*.png
 results/*.jpg
 results/*.jpeg
 results/*.pdf
 results/*.svg
 
-# Data files
-*.csv
-*.json
-*.jsonl
-*.parquet
+# Data files (ignore at root, but not in results/)
+/*.json
+/*.jsonl
+/*.parquet
 
 # OS
 .DS_Store
@@ -90,6 +90,7 @@ Thumbs.db
 *.swp
 *.swo
 *~
+*.bak
 
 # Environment variables
 .env
