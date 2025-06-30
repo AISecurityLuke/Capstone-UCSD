@@ -1,0 +1,11 @@
+model,precision_macro,recall_macro,f1_macro,best_params,status,experiment_id
+logistic_regression,0.9963,0.9960,0.9961,"{'C': 10, 'penalty': 'l2', 'solver': 'liblinear'}",success
+random_forest,0.9921,0.9927,0.9924,"{'max_depth': None, 'min_samples_split': 5, 'n_estimators': 50}",success
+svm,0.9967,0.9969,0.9968,"{'C': 10, 'gamma': 'scale', 'kernel': 'rbf'}",success
+naive_bayes,0.9585,0.9394,0.9474,{'alpha': 0.1},success
+xgboost,0.9923,0.9925,0.9924,"{'learning_rate': 0.2, 'max_depth': 6, 'n_estimators': 200}",success
+cnn_best,0.8795,0.8754,0.8759,keras_adaptive,success
+lstm_best,0.8379,0.8354,0.8305,keras_adaptive,success
+bilstm_best,0.9421,0.9383,0.9400,keras_adaptive,success
+transformer_best,0.1667,0.3333,0.2222,keras_adaptive,success
+hybrid_best,0.8589,0.8683,0.8629,keras_adaptive,success
