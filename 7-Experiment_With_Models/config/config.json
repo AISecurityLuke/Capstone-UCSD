@@ -1,0 +1,216 @@
+{
+  "data_path": "../5-Data_Wrangling/combined_demo.json",
+  "test_size": 0.2,
+  "random_seed": 42,
+  "max_train_samples": null,
+  "enable_dl": true,
+  "architecture_search": true,
+  "adaptive_training": true,
+  
+  "preprocessing": {
+    "text_cleaning": {
+      "remove_html": true,
+      "normalize_whitespace": true,
+      "remove_special_chars": false
+    },
+    "tokenization": {
+      "max_length": 100,
+      "padding": "post",
+      "truncation": "post"
+    },
+    "augmentation": {
+      "enable": false,
+      "techniques": ["synonym_replacement"]
+    }
+  },
+  
+  "traditional_ml": {
+    "models": ["logistic_regression", "random_forest", "svm", "naive_bayes", "xgboost"],
+    "cv_folds": 5,
+    "n_jobs": -1,
+    "timeout": 300
+  },
+  
+  "deep_learning": {
+    "models": ["cnn", "lstm", "bilstm", "transformer", "hybrid"],
+    "max_epochs": 3,
+    "batch_size": 32,
+    "learning_rate": 0.001,
+    "early_stopping_patience": 5,
+    "timeout": 600,
+    "enable_gpu": true,
+    "mixed_precision": true
+  },
+  
+  "model_architectures": {
+    "cnn": {
+      "default_config": {
+        "filters": 128,
+        "kernel_size": 5,
+        "dropout": 0.3,
+        "layers": 2
+      },
+      "search_space": {
+        "filters": [64, 128, 256],
+        "kernel_size": [3, 5, 7],
+        "dropout": [0.2, 0.3, 0.4],
+        "layers": [1, 2, 3]
+      }
+    },
+    "lstm": {
+      "default_config": {
+        "units": 128,
+        "layers": 2,
+        "dropout": 0.2,
+        "bidirectional": false
+      },
+      "search_space": {
+        "units": [64, 128, 256],
+        "layers": [1, 2, 3],
+        "dropout": [0.1, 0.2, 0.3],
+        "bidirectional": [true, false]
+      }
+    },
+    "bilstm": {
+      "default_config": {
+        "units": 128,
+        "layers": 2,
+        "dropout": 0.2
+      },
+      "search_space": {
+        "units": [64, 128, 256],
+        "layers": [1, 2, 3],
+        "dropout": [0.1, 0.2, 0.3]
+      }
+    },
+    "transformer": {
+      "default_config": {
+        "num_heads": 8,
+        "ff_dim": 512,
+        "num_layers": 2,
+        "dropout": 0.1
+      },
+      "search_space": {
+        "num_heads": [4, 8, 16],
+        "ff_dim": [256, 512, 1024],
+        "num_layers": [1, 2, 3],
+        "dropout": [0.1, 0.2, 0.3]
+      }
+    },
+    "hybrid": {
+      "default_config": {
+        "cnn_filters": 128,
+        "cnn_kernel_size": 5,
+        "lstm_units": 128,
+        "dropout": 0.3
+      },
+      "search_space": {
+        "cnn_filters": [64, 128, 256],
+        "cnn_kernel_size": [3, 5, 7],
+        "lstm_units": [64, 128, 256],
+        "dropout": [0.2, 0.3, 0.4]
+      }
+    }
+  },
+  
+  "training_callbacks": {
+    "early_stopping": {
+      "patience": 5,
+      "restore_best_weights": true,
+      "monitor": "val_loss"
+    },
+    "learning_rate_scheduler": {
+      "factor": 0.5,
+      "patience": 3,
+      "min_lr": 1e-7
+    },
+    "model_checkpoint": {
+      "save_best_only": true,
+      "monitor": "val_f1_macro"
+    }
+  },
+  
+  "experiment_tracking": {
+    "enable_mlflow": true,
+    "enable_wandb": false,
+    "enable_ray": false,
+    "tracking_uri": "sqlite:///mlruns.db",
+    "experiment_name": "prompt_classification",
+    "model_registry_name": "prompt_classifier"
+  },
+  
+  "data_validation": {
+    "enable_validation": true,
+    "validation_config": {
+      "text_validation": {
+        "min_length": 5,
+        "max_length": 2000,
+        "required_fields": ["user_message", "classification"],
+        "allowed_classifications": ["0", "1", "2", "safe", "suspicious", "malicious"]
+      },
+      "data_quality": {
+        "missing_threshold": 0.05,
+        "duplicate_threshold": 0.1,
+        "class_balance_threshold": 0.1
+      },
+      "drift_detection": {
+        "enabled": true,
+        "reference_data_path": null,
+        "drift_threshold": 0.05
+      }
+    }
+  },
+  
+  "distributed_training": {
+    "enable_distributed": false,
+    "strategy": "mirrored",
+    "num_workers": 4,
+    "batch_size_per_replica": 32
+  },
+  
+  "hyperparameter_optimization": {
+    "enable_optuna": false,
+    "num_trials": 50,
+    "timeout": 1800,
+    "search_spaces": {
+      "logistic_regression": {
+        "C": {"type": "float", "low": 0.1, "high": 10.0, "log": true},
+        "penalty": {"type": "categorical", "choices": ["l1", "l2", "elasticnet"]}
+      },
+      "random_forest": {
+        "n_estimators": {"type": "int", "low": 50, "high": 300},
+        "max_depth": {"type": "int", "low": 3, "high": 20},
+        "min_samples_split": {"type": "int", "low": 2, "high": 20}
+      }
+    }
+  },
+  
+  "model_serving": {
+    "enable_bentoml": false,
+    "service_name": "prompt_classifier",
+    "api_type": "rest",
+    "max_batch_size": 100,
+    "timeout": 30
+  },
+  
+  "monitoring": {
+    "enable_prometheus": false,
+    "metrics_port": 8000,
+    "health_check_interval": 60,
+    "performance_thresholds": {
+      "max_latency_ms": 1000,
+      "max_error_rate": 0.05,
+      "min_throughput_rps": 10
+    }
+  },
+  
+  "security": {
+    "enable_input_validation": true,
+    "max_input_length": 1000,
+    "allowed_characters": "utf-8",
+    "rate_limiting": {
+      "enabled": false,
+      "requests_per_minute": 100
+    }
+  }
+} 
