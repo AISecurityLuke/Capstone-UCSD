@@ -1,0 +1,122 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+
+# MLflow
+mlruns/
+mlruns.db
+
+# Logs
+logs/
+*.log
+
+# Model files and checkpoints (large binary files)
+models/*.h5
+models/*.pkl
+models/*.safetensors
+models/*.pt
+models/*.bin
+models/*/model.h5
+models/*/model.pkl
+models/*/tokenizer.pkl
+models/*/best_model.h5
+models/*/best_model.keras
+models/*/model.keras
+models/*/vectorizer.pkl
+
+# HuggingFace model files and checkpoints
+models/*/config.json
+models/*/tokenizer.json
+models/*/tokenizer_config.json
+models/*/special_tokens_map.json
+models/*/vocab.txt
+models/*/model.safetensors
+models/*/training_args.bin
+models/*/optimizer.pt
+models/*/scheduler.pt
+models/*/rng_state.pth
+models/*/trainer_state.json
+models/*/checkpoint-*/
+
+# Results images (keep other result files)
+results/images/*.png
+results/images/*.jpg
+results/images/*.jpeg
+results/images/*.pdf
+results/images/*.svg
+
+# Data files (ignore at root, but not in results/)
+/*.json
+/*.jsonl
+/*.parquet
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+*.bak
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Wandb
+wandb/
+
+# Large data files
+*.h5
+*.hdf5
+*.pkl
+*.pickle
+*.safetensors
+*.pt
+*.bin 
