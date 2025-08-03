@@ -1,0 +1,27 @@
+---
+title: "4.4 – Conclusion & Analysis"
+author: "Luke Johnson" (AISecurityLuke)
+date: "2025-06-17"
+---
+
+# Conclusion & Analysis
+
+Through this structured survey and the accompanying replication exercises I distilled **three overarching insights** that now anchor the design of my *Chatbot Filtration Capstone*:
+
+## 1 Layered Taxonomy Outperforms Monolithic Labels
+Fine-grained distinctions—*direct illicit requests*, *indirect jailbreaks*, and *benign queries*—tighten policy alignment and reduce unnecessary user friction.
+The reproduced **TF-IDF + Logistic Regression** gatekeeper achieved **96.3 % F1** on the Deepset Prompt-Injection test set (*sinanw_executed.ipynb*, cell 23) while consuming < 200 MB RAM, yet its performance dropped to **71 % F1** on novel German injections.  These results validate my planned **Safe / Suspicious / Malicious** hierarchy: lightweight heuristics clear the common case, and transformer-based secondaries capture adversarial edge-cases.
+
+## 2 Adversarial Training Slashes Jailbreak Success
+Re-running the prompt-shielding experiments revealed a **60 % reduction in jailbreak success** after five epochs of BAND-style augmentation (*ayub_executed.ipynb*, cell 41).  Each augmentation cycle decreased false-negatives more than any hyper-parameter tweak.  Accordingly, the Capstone will embed an **active-learning loop** that harvests borderline Suspicious prompts from production logs, labels them with minimal analyst effort, and folds them back into the training corpus on a weekly cadence.
+
+## 3 Explainability Is Non-Negotiable
+Embedding-space clustering and tree-ensemble feature-importance plots (Ayub repo) reveal *why* certain phrases correlate with malicious intent, accelerating auditor approval and incident triage.  The Capstone will therefore expose per-decision attribution scores through an internal API so analysts can trace filtration outcomes without direct model introspection.
+
+## How the Capstone Advances Prior Work
+• **Unified triage across harm types** – One API harmonises all policy classes, replacing specialised single-label detectors.  
+• **Resource-aware orchestration** – Conditional escalation to GPU maintains peak memory below 24 GB, a margin missing from prior prototypes.  
+• **Multilingual & multimodal extensibility** – A modular embedding layer simplifies adding non-English corpora and code-tokenisers, closing a gap noted across the surveyed works.
+
+## Summary
+Classical baselines remain valuable, adversarial augmentation is paramount, and interpretability must permeate every layer of a secure NLP pipeline.  These lessons set a performance floor of **0.96 F1** for my Capstone and chart a clear roadmap to exceed it.  By coupling a security-engineer's rigour with machine-learning agility, the forthcoming system will be a resilient, transparent, and resource-efficient gatekeeper that elevates prompt safety beyond the current state of the art.

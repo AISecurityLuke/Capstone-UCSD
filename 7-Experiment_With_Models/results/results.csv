@@ -1,0 +1,2 @@
+model,precision_macro,recall_macro,f1_macro,roc_auc,best_params,status,f1_external,per_class_f1
+random_forest,0.7474,0.7483,0.7472,0.8931,"{'max_depth': None, 'min_samples_split': 10, 'n_estimators': 200}",success,0.4265,"{0: 0.6543325526932084, 1: 0.6036829463570856, 2: 0.9836806427316094}"

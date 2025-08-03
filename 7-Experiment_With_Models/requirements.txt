@@ -1,0 +1,29 @@
+matplotlib
+scikit-learn
+seaborn
+pandas
+numpy
+transformers[torch]
+datasets
+joblib
+xgboost
+tensorflow
+tf-keras
+psutil
+accelerate>=0.26.0
+# Production ML tools
+mlflow>=2.8.0
+wandb>=0.16.0
+dagshub>=0.3.0
+optuna>=3.4.0
+ray[tune]>=2.8.0
+hydra-core>=1.3.0
+pydantic>=2.0.0
+# Data validation and monitoring
+great-expectations>=0.17.0
+evidently>=0.3.0
+# Model serving
+bentoml>=1.2.0
+# Performance monitoring
+prometheus-client>=0.17.0
+scipy>=1.10.0
