@@ -59,8 +59,8 @@
       "hybrid",
       "lstm"
     ],
-    "max_epochs": 15,
-    "batch_size": 64,
+    "max_epochs": 8,
+    "batch_size": 128,
     "learning_rate": 0.0001,
     "early_stopping_patience": 5,
     "timeout": 1200,
@@ -82,8 +82,8 @@
       "roberta_large",
       "bert_large"
     ],
-    "max_epochs": 15,
-    "batch_size": 16,
+    "max_epochs": 8,
+    "batch_size": 32,
     "warmup_ratio": 0.1,
     "fp16": true,
     "cv_folds": 4,
@@ -105,10 +105,10 @@
         "l2_reg": 0.01
       },
       "search_space": {
-        "filters": [64, 128],
-        "kernel_size": [3, 5, 7],
-        "dropout": [0.2, 0.3, 0.4, 0.5],
-        "layers": [1, 2, 3, 4, 5]
+        "filters": [128],
+        "kernel_size": [5],
+        "dropout": [0.4],
+        "layers": [2]
       }
     },
     "lstm": {
@@ -120,10 +120,9 @@
         "l2_reg": 0.01
       },
       "search_space": {
-        "units": [128, 256],
-        "layers": [1, 2],
-        "dropout": [0.2, 0.3],
-        "bidirectional": [false]
+        "units": [256],
+        "layers": [2],
+        "dropout": [0.4]
       }
     },
     "bilstm": {
@@ -134,9 +133,9 @@
         "bidirectional": true
       },
       "search_space": {
-        "units": [128, 256],
-        "layers": [1, 2],
-        "dropout": [0.2, 0.3]
+        "units": [128],
+        "layers": [2],
+        "dropout": [0.4]
       }
     },
     "transformer": {
@@ -189,10 +188,10 @@
         "learning_rate": 1e-05
       },
       "search_space": {
-        "model_name": ["distilbert-base-uncased", "distilbert-base-cased"],
-        "max_length": [256, 512],
-        "dropout": [0.1, 0.2, 0.3],
-        "learning_rate": [2e-5, 3e-5, 4e-5, 5e-5]
+        "model_name": ["distilbert-base-uncased"],
+        "max_length": [1024],
+        "dropout": [0.2],
+        "learning_rate": [1e-05]
       }
     },
     "roberta": {
@@ -304,8 +303,8 @@
   
   "hyperparameter_optimization": {
     "enable_optuna": true,
-    "num_trials": 30,
-    "timeout": 1800,
+    "num_trials": 15,
+    "timeout": 900,
     "search_spaces": {
       "logistic_regression": {
         "C": {"type": "float", "low": 0.1, "high": 10.0, "log": true},
