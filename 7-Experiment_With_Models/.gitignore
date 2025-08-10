@@ -1,0 +1,100 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+
+# MLflow
+mlruns/
+mlruns.db
+
+# Logs
+logs/
+*.log
+
+# Model files (large binary files)
+models/*.h5
+models/*.pkl
+models/*.safetensors
+models/*/model.h5
+models/*/model.pkl
+models/*/tokenizer.pkl
+models/*/best_model.h5
+
+# HuggingFace model files
+models/*/config.json
+models/*/tokenizer.json
+models/*/tokenizer_config.json
+models/*/special_tokens_map.json
+models/*/vocab.txt
+models/*/model.safetensors
+
+# Results and outputs
+# Ignore only images in results, but keep all other files (including .py, .csv, etc.)
+results/*.png
+results/*.jpg
+results/*.jpeg
+results/*.pdf
+results/*.svg
+
+# Data files (ignore at root, but not in results/)
+/*.json
+/*.jsonl
+/*.parquet
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+*.bak
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local 
