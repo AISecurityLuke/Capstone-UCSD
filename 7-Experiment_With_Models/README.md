@@ -2,6 +2,8 @@
 
 A comprehensive, enterprise-ready machine learning experiment framework for prompt classification with support for traditional ML, deep learning, and transformer models. Built with production-grade features including model evaluation, A/B testing, deployment pipelines, and comprehensive monitoring.
 
+**🔒 Security-Focused Design**: This framework is specifically optimized for malicious prompt detection with custom metrics that heavily penalize misclassifications between benign (class 0) and malicious (class 2) content, ensuring high recall for threats while minimizing false alarms.
+
 ## 🚀 Quick Start
 
 ```bash
@@ -18,7 +20,7 @@ This single command will:
 2. **Train all configured models** across three categories (Traditional ML, Deep Learning, Transformers)
 3. **Perform rigorous evaluation** with cross-validation, statistical significance testing, **and an external blind-set validation** (column `f1_external` in `results/results.csv`)
 4. **Generate comprehensive visualizations** and insights
-5. **Select the best model** using multi-criteria optimization
+5. **Select the best model** using multi-criteria optimization with custom security-focused scoring
 6. **Prepare deployment artifacts** with model cards and documentation
 
 ## 🏗️ Architecture Overview
@@ -48,6 +50,8 @@ This single command will:
 │   ├── dl_visualizations.py   # Deep learning specific viz
 │   └── training_analysis.py   # Training analysis
 ├── utils/                     # Utility modules
+│   ├── metrics.py             # Custom security-focused metrics
+│   └── focal_loss.py          # Focal loss implementations
 ├── logs/                      # Experiment logs
 └── requirements.txt           # Dependencies
 ```
@@ -74,10 +78,107 @@ This single command will:
 - **RoBERTa**: Robustly Optimized BERT Pretraining Approach
 - **ALBERT**: A Lite BERT (very lightweight, 45MB)
 - **DistilRoBERTa**: Distilled version of RoBERTa
+- **XLM-RoBERTa**: Cross-lingual transformer models
+
+## 🔒 Security-Focused Custom Metrics
+
+### **Custom Scoring System**
+The framework uses a specialized scoring system designed for security applications:
+
+```python
+# Base score components (weighted by importance)
+base_score = 0.5 * recall_c2 + 0.3 * precision_c1 + 0.2 * f1_c0
+
+# Critical misclassification penalty (exponential)
+critical_error_rate = P(0→2) + P(2→0)  # benign→malicious + malicious→benign
+penalty_factor = exp(-5 * critical_error_rate)
+
+# Final custom score
+custom_score = base_score * penalty_factor
+```
+
+### **Security Objectives**
+1. **Maximize malicious recall** (class 2): Catch as many threats as possible
+2. **Minimize false alarms** (0→2): Almost never block legitimate prompts
+3. **Route uncertainty to suspicious** (class 1): Let SIEM handle edge cases
+4. **Maintain suspicious precision**: Avoid analyst fatigue
+
+### **Critical Error Penalties**
+- **Exponential penalty scaling**: Even small rates of 0↔2 misclassifications severely impact scores
+- **Separate tracking**: Monitor false alarms (0→2) vs missed threats (2→0) independently
+- **Business alignment**: Penalties reflect the high cost of security failures
+
+## 📊 Results and Metrics
+
+### **Results CSV Structure**
+```
+results/results.csv columns:
+├── model                    # Model name
+├── precision_macro          # Overall precision
+├── recall_macro            # Overall recall  
+├── f1_macro               # Overall F1 score
+├── roc_auc                # ROC AUC score
+├── best_params            # Best hyperparameters
+├── status                 # Training status
+├── f1_external           # External blind-set F1
+├── precision_c1          # Precision for suspicious class
+├── recall_c2             # Recall for malicious class
+├── f1_c0                 # F1 for benign class
+├── custom_score          # Security-focused composite score
+├── false_alarm_rate      # Rate of benign→malicious errors
+├── missed_threat_rate    # Rate of malicious→benign errors
+└── per_class_f1          # Per-class F1 scores
+```
+
+### **Key Metrics to Monitor**
+- **`custom_score`**: Primary metric for model selection (higher is better)
+- **`recall_c2`**: Malicious threat detection rate (target: >0.9)
+- **`false_alarm_rate`**: Benign→malicious errors (target: <0.01)
+- **`missed_threat_rate`**: Malicious→benign errors (target: <0.05)
+- **`precision_c1`**: Suspicious classification precision (target: >0.7)
+- **`f1_external`**: Performance on unseen blind-set (target: >0.6)
+
+### **Model Selection Criteria**
+1. **Security Performance**: `custom_score` > 0.6, `recall_c2` > 0.85
+2. **False Alarm Control**: `false_alarm_rate` < 0.02
+3. **Threat Detection**: `missed_threat_rate` < 0.1
+4. **Efficiency**: Latency < 100ms, memory < 2GB
+5. **Stability**: Cross-validation std < 0.05
 
 ## 🔧 Configuration
 
-### Production-Grade Configuration Features
+### **Security-Focused Configuration**
+
+#### **Class Weights and Loss Functions**
+```json
+{
+  "use_class_weights": true,
+  "class_weights": [1, 1, 1.5],  // [benign, suspicious, malicious]
+  "deep_learning": {
+    "loss_function": "focal",
+    "focal_gamma": 3.0,
+    "focal_alpha": [1, 1, 1.5]
+  },
+  "transformers": {
+    "loss_function": "focal", 
+    "focal_gamma": 3.0,
+    "focal_alpha": [1, 1, 1.5]
+  }
+}
+```
+
+#### **Custom Metrics Configuration**
+```json
+{
+  "custom_metric": true,  // Enable custom scoring for model selection
+  "external_validation": {
+    "enable": true,
+    "data_path": "validation_jsons/outside_test_data.json"
+  }
+}
+```
+
+### **Production-Grade Configuration Features**
 
 The framework includes comprehensive configuration for production ML:
 
@@ -100,103 +201,9 @@ The framework includes comprehensive configuration for production ML:
 }
 ```
 
-#### **Model Selection**
-```json
-{
-  "model_selection": {
-    "selection_strategy": "multi_criteria",
-    "criteria": {
-      "performance_weight": 0.6,
-      "efficiency_weight": 0.2,
-      "interpretability_weight": 0.1,
-      "robustness_weight": 0.1
-    },
-    "ensemble_methods": {
-      "enable_voting": true,
-      "enable_stacking": true,
-      "voting_strategy": "soft"
-    }
-  }
-}
-```
+## 🚀 Usage Examples
 
-#### **A/B Testing Framework**
-```json
-{
-  "a_b_testing": {
-    "enable_ab_testing": false,
-    "test_duration_days": 14,
-    "traffic_split": {"control": 0.5, "treatment": 0.5},
-    "success_metrics": ["accuracy", "user_satisfaction", "response_time"],
-    "statistical_power": 0.8,
-    "significance_level": 0.05
-  }
-}
-```
-
-#### **Model Deployment**
-```json
-{
-  "model_deployment": {
-    "deployment_strategy": "blue_green",
-    "rollback_threshold": 0.05,
-    "model_versioning": {
-      "enable_semantic_versioning": true,
-      "version_format": "major.minor.patch"
-    },
-    "containerization": {
-      "enable_docker": true,
-      "base_image": "python:3.9-slim"
-    }
-  }
-}
-```
-
-## 📈 Advanced Features
-
-### **1. Comprehensive Model Evaluation**
-- **Cross-validation** with stratified sampling
-- **Statistical significance testing** between models
-- **Confidence intervals** for performance metrics
-- **Baseline comparison** against majority class
-- **Performance thresholds** for production readiness
-
-### **2. Multi-Criteria Model Selection**
-- **Performance-based selection** (accuracy, F1, precision, recall)
-- **Efficiency considerations** (inference time, memory usage)
-- **Interpretability scoring** (feature importance, model complexity)
-- **Robustness assessment** (cross-validation stability)
-- **Ensemble methods** (voting, stacking, blending)
-
-### **3. Production Monitoring**
-- **Real-time performance tracking**
-- **Data drift detection**
-- **Model degradation alerts**
-- **Resource utilization monitoring**
-- **Error rate tracking**
-
-### **4. Model Fairness & Compliance**
-- **Fairness testing** across protected attributes
-- **Bias detection** and mitigation
-- **GDPR compliance** features
-- **Audit trail** for model changes
-- **Data privacy** controls
-
-### **5. Error Handling & Resilience**
-- **Circuit breaker pattern** for fault tolerance
-- **Retry policies** with exponential backoff
-- **Fallback strategies** for graceful degradation
-- **Comprehensive logging** and error tracking
-
-### **6. Performance Optimization**
-- **Model compression** (quantization, pruning)
-- **Prediction caching** for improved latency
-- **Batch processing** for throughput optimization
-- **Resource management** and scaling
-
-## 🎯 Usage Examples
-
-### **Basic Production Run**
+### **Basic Usage**
 ```bash
 # Run complete pipeline with all models
 python experiment/experiment_runner.py
@@ -255,7 +262,7 @@ performance_metrics = results.get_performance_summary()
 ### **Results Structure**
 ```
 results/
-├── results.csv              # Complete experiment results
+├── results.csv              # Complete experiment results with custom metrics
 ├── experiment_results.json  # Detailed results with metadata
 ├── images/                  # Comprehensive visualizations
 │   ├── model_comparison.png
@@ -268,22 +275,6 @@ results/
     │   ├── config.json
     │   └── performance.json
 ```
-
-### **Key Metrics to Monitor**
-- **Accuracy**: Overall classification accuracy
-- **F1 Score**: Harmonic mean of precision and recall
-- **Precision/Recall**: Per-class performance
-- **ROC AUC**: Area under ROC curve
-- **Cross-validation stability**: Model robustness
-- **Inference latency**: Production readiness
-- **Memory usage**: Resource efficiency
-
-### **Model Selection Criteria**
-1. **Performance**: F1 score > 0.7, accuracy > 0.8
-2. **Efficiency**: Latency < 100ms, memory < 2GB
-3. **Stability**: CV std < 0.05
-4. **Interpretability**: Feature importance available
-5. **Fairness**: Bias score < 0.1
 
 ## 🔍 Troubleshooting
 
@@ -307,11 +298,11 @@ results/
 "units": 64  # Instead of 256
 ```
 
-#### **Poor Performance**
-- Check data quality and class balance
-- Verify preprocessing pipeline
-- Consider feature engineering
-- Try different model architectures
+#### **Poor Security Performance**
+- Check class balance in training data
+- Verify external validation set quality
+- Consider adjusting class weights or focal loss parameters
+- Review false alarm vs missed threat rates separately
 
 #### **Transformer-Specific Issues**
 - Ensure MLflow is uninstalled (causes conflicts)
@@ -386,6 +377,7 @@ spec:
 3. **Documentation**: Update README and docstrings
 4. **Configuration**: Add new options to config.json
 5. **Logging**: Use structured logging throughout
+6. **Security Focus**: Maintain custom metrics and penalty system
 
 ### **Code Quality**
 - Follow PEP 8 style guidelines
@@ -393,6 +385,7 @@ spec:
 - Include comprehensive error handling
 - Write unit tests for new features
 - Update configuration documentation
+- Ensure custom metrics are computed for all model types
 
 ## 📄 License
 

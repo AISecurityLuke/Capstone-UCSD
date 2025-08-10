@@ -35,7 +35,7 @@ from tensorflow.keras import layers
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
 
 # Mixed precision
-if CONFIG_GLOBAL.get('deep_learning', {}).get('mixed_precision', False):
+if CONFIG_GLOBAL.get('deep_learning', {}).get('mixed_precision', False) and gpus:
     try:
         from tensorflow.keras import mixed_precision as mp
         mp.set_global_policy('mixed_float16')
@@ -59,6 +59,8 @@ from models.utils.model_manager import model_manager
 from models.keras_models import create_model
 from utils.monitor import monitor
 import pickle
+from utils.focal_loss import get_keras_focal_loss
+from utils.metrics import compute_custom_metrics
 
 # Ensure report dir
 os.makedirs(os.path.join('results', 'reports'), exist_ok=True)
@@ -280,10 +282,17 @@ def train_adaptive_model(model, X_train, y_train, X_test, y_test, model_name, co
     global_lr = config.get('deep_learning', {}).get('learning_rate')
     learning_rate = arch_lr if arch_lr is not None else (global_lr if global_lr is not None else 0.001)
 
-    # Compile with plain string 'adam' for maximum compatibility, then set lr & clipnorm directly
+    # Compile with focal or cross-entropy loss based on config
+    dl_cfg = config.get('deep_learning', {})
+    if dl_cfg.get('loss_function', 'cross_entropy').lower() == 'focal':
+        gamma = dl_cfg.get('focal_gamma', 2.0)
+        alpha = dl_cfg.get('focal_alpha', None)
+        loss_fn = get_keras_focal_loss(gamma=gamma, alpha=alpha)
+    else:
+        loss_fn = 'categorical_crossentropy'
     model.compile(
         optimizer='adam',
-        loss='categorical_crossentropy',
+        loss=loss_fn,
         metrics=['accuracy']
     )
     # Override optimizer hyperparams after compile
@@ -383,6 +392,13 @@ def train_adaptive_model(model, X_train, y_train, X_test, y_test, model_name, co
     
     precision, recall, f1, _ = precision_recall_fscore_support(y_test, y_pred, average='macro')
     
+    # Custom metrics per requirements
+    custom_metrics = compute_custom_metrics(y_test, y_pred)
+    logging.info(
+        f"[{model_name}] Custom metrics – recall_c2={custom_metrics['recall_c2']:.3f} "
+        f"precision_c1={custom_metrics['precision_c1']:.3f} f1_c0={custom_metrics['f1_c0']:.3f}"
+    )
+    
     # Debug: Log the discrepancy between training val_f1_macro and final evaluation
     if 'val_f1_macro' in history.history:
         best_val_f1 = max(history.history['val_f1_macro'])
@@ -417,6 +433,8 @@ def train_adaptive_model(model, X_train, y_train, X_test, y_test, model_name, co
     # ----------------------
     os.makedirs(os.path.join('results', 'reports'), exist_ok=True)
     report = classification_report(y_test, y_pred, output_dict=True, zero_division=0)
+    # Per-class F1 list (ordered by class id)
+    per_class_f1 = [report[str(cls)]['f1-score'] for cls in sorted([int(c) for c in report.keys() if str(c).isdigit()])]
     with open(os.path.join('results', 'reports', f"{model_name}.json"), 'w') as fp:
         json.dump(report, fp, indent=2)
     
@@ -435,9 +453,16 @@ def train_adaptive_model(model, X_train, y_train, X_test, y_test, model_name, co
         'roc_auc': roc_auc,
         'accuracy': accuracy,
         'f1_ext': f1_ext,
+        'per_class_f1': per_class_f1,
         'history': history.history,
         'adaptation_history': controller.adaptation_history,
-        'architecture_config': arch_config
+        'architecture_config': arch_config,
+        'precision_c1': custom_metrics['precision_c1'],
+        'recall_c2': custom_metrics['recall_c2'],
+        'f1_c0': custom_metrics['f1_c0'],
+        'custom_score': custom_metrics['custom_score'],
+        'false_alarm_rate': custom_metrics['false_alarm_rate'],
+        'missed_threat_rate': custom_metrics['missed_threat_rate']
     }
 
 def train_and_evaluate_deep_models(data_dict, config, ext_data=None):
@@ -482,7 +507,14 @@ def train_and_evaluate_deep_models(data_dict, config, ext_data=None):
                         f"{result['roc_auc']:.4f}",
                         'hf',
                         'success',
-                        f"{result['f1_ext']:.4f}"
+                        f"{result.get('f1_ext', float('nan')):.4f}",
+                        f"{result.get('precision_c1', 0):.4f}",
+                        f"{result.get('recall_c2', 0):.4f}",
+                        f"{result.get('f1_c0', 0):.4f}",
+                        f"{result.get('custom_score', 0):.4f}",
+                        f"{result.get('false_alarm_rate', 0):.4f}",
+                        f"{result.get('missed_threat_rate', 0):.4f}",
+                        json.dumps(result.get('per_class_f1', {}))
                     ])
                 successful_models.append(model_type)
                 logging.info(f"{model_type} completed - F1: {result['f1']:.4f}")
@@ -565,7 +597,10 @@ def train_and_evaluate_deep_models(data_dict, config, ext_data=None):
                             f"{best_result['roc_auc']:.4f}",
                             str(best_trial.params),
                             'success',
-                            f"{best_result['f1_ext']:.4f}"
+                            f"{best_result['f1_ext']:.4f}",
+                            json.dumps(best_result['per_class_f1']),
+                            f"{best_result.get('false_alarm_rate', 0):.4f}",
+                            f"{best_result.get('missed_threat_rate', 0):.4f}"
                         ])
 
                     # Save model
@@ -651,7 +686,14 @@ def train_and_evaluate_deep_models(data_dict, config, ext_data=None):
                         f"{best_result['roc_auc']:.4f}",
                         str(best_result.get('architecture_config', 'keras_adaptive')),
                         'success',
-                        f"{best_result['f1_ext']:.4f}"
+                        f"{best_result.get('f1_ext', float('nan')):.4f}",
+                        f"{best_result.get('precision_c1', 0):.4f}",
+                        f"{best_result.get('recall_c2', 0):.4f}",
+                        f"{best_result.get('f1_c0', 0):.4f}",
+                        f"{best_result.get('custom_score', 0):.4f}",
+                        f"{best_result.get('false_alarm_rate', 0):.4f}",
+                        f"{best_result.get('missed_threat_rate', 0):.4f}",
+                        json.dumps(best_result.get('per_class_f1', {}))
                     ])
                 
                 # Save best model
@@ -983,38 +1025,29 @@ def train_hf_transformer_model(model_key, X_train, y_train, X_test, y_test, num_
     
     # Add class F1 scores to the results
     result['class_f1'] = class_f1_dict
-    
-    # ------------------------------------------------------------
-    # Log misclassified examples (max 50 per class per model)
-    # ------------------------------------------------------------
-    misclassified_examples = {}
-    for true_class in range(3):
-        for pred_class in range(3):
-            if true_class != pred_class:
-                mask = (y_test == true_class) & (y_pred == pred_class)
-                if mask.any():
-                    misclassified_texts = [X_test[i] for i in np.where(mask)[0][:50]]  # Max 50 per confusion
-                    key = f"true_{true_class}_predicted_{pred_class}"
-                    misclassified_examples[key] = misclassified_texts
-    
-    # Save misclassified examples
-    misclassified_path = os.path.join('results', 'results_misclassification.json')
-    try:
-        if os.path.exists(misclassified_path):
-            with open(misclassified_path, 'r') as f:
-                all_misclassified = json.load(f)
-        else:
-            all_misclassified = {}
-        
-        all_misclassified[model_name] = {
-            "model_type": "deep_learning",
-            "misclassified_examples": misclassified_examples
-        }
-        
-        with open(misclassified_path, 'w') as f:
-            json.dump(all_misclassified, f, indent=2)
-    except Exception as e:
-        logging.warning(f"Failed to save misclassified examples for {model_name}: {e}")
+
+    # Save model
+    model_dir = os.path.join('models', f"{model_key}_hf_best")
+    os.makedirs(model_dir, exist_ok=True)
+    trainer.save_model(model_dir)
+    tokenizer.save_pretrained(model_dir)
+
+    # External validation (if ext_data provided)
+    f1_ext = float('nan')
+    if data_dict and 'X_ext' in data_dict and 'y_ext' in data_dict:
+        try:
+            from datasets import Dataset
+            def tokenize_function(examples):
+                return tokenizer(examples["text"], truncation=True, max_length=max_length)
+            
+            ext_dict = {"text": data_dict['X_ext'], "label": data_dict['y_ext']}
+            ext_ds = Dataset.from_dict(ext_dict)
+            ext_ds = ext_ds.rename_column("label", "labels")
+            ext_ds = ext_ds.map(tokenize_function, batched=True)
+            preds_ext = trainer.predict(ext_ds).predictions.argmax(axis=1)
+            _, _, f1_ext, _ = precision_recall_fscore_support(data_dict['y_ext'], preds_ext, average="macro")
+        except Exception as e:
+            logging.warning(f"{model_key}: external validation failed – {e}")
 
     # Detailed classification report
     from sklearn.metrics import classification_report
@@ -1023,11 +1056,26 @@ def train_hf_transformer_model(model_key, X_train, y_train, X_test, y_test, num_
     with open(os.path.join('results', 'reports', f"{model_key}.json"), 'w') as fp:
         json.dump(report, fp, indent=2)
 
-    return {
+    # Custom metrics per requirements
+    custom = compute_custom_metrics(y_test, y_pred)
+    logging.info(
+        f"[HFTrainer] Custom metrics – recall_c2={custom['recall_c2']:.3f} "
+        f"precision_c1={custom['precision_c1']:.3f} f1_c0={custom['f1_c0']:.3f}"
+    )
+
+    result = {
         'precision': precision,
         'recall': recall,
         'f1': f1,
         'roc_auc': roc_auc,
-        'accuracy': accuracy,
-        'f1_ext': f1_ext
-    } 
+        'f1_ext': f1_ext,
+        'per_class_f1': per_class_f1,
+        'precision_c1': custom['precision_c1'],
+        'recall_c2': custom['recall_c2'],
+        'f1_c0': custom['f1_c0'],
+        'custom_score': custom['custom_score'],
+        'false_alarm_rate': custom['false_alarm_rate'],
+        'missed_threat_rate': custom['missed_threat_rate']
+    }
+
+    return result 

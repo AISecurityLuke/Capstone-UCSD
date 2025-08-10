@@ -28,6 +28,9 @@ import json
 # Add parent directory to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# -- Custom metrics (import after path adjustment) --
+from utils.metrics import compute_custom_metrics, sklearn_custom_scorer
+
 from config.config import load_config
 from utils.sanitizer import escape_for_logging
 
@@ -138,9 +141,14 @@ def train_single_model(model_name, X_train, y_train, X_test, y_test, config, ext
     logging.info(f"Starting GridSearchCV for {model_name} with {cv_folds} folds, {n_jobs} jobs")
     logging.info(f"Parameter grid size: {len(param_grid)} parameters to test")
     
+    # Choose scoring method based on config flag
+    scoring_method = 'f1_macro'
+    if config.get('custom_metric', False):
+        logging.info("Using custom composite scorer for GridSearchCV")
+        scoring_method = sklearn_custom_scorer
     try:
         search = GridSearchCV(
-            model, param_grid, cv=cv_folds, scoring='f1_macro',
+            model, param_grid, cv=cv_folds, scoring=scoring_method,
             n_jobs=n_jobs, verbose=2, error_score='raise'  # More verbose, raise errors
         )
         class TimeoutException(Exception):
@@ -212,10 +220,20 @@ def train_single_model(model_name, X_train, y_train, X_test, y_test, config, ext
         except Exception as e:
             logging.warning(f"{model_name}: external validation failed – {e}")
     
-    # Calculate per-class F1 scores
-    class_f1_scores = precision_recall_fscore_support(y_test, y_pred, average=None)[2]
+    # Custom per-class metrics
+    custom_metrics = compute_custom_metrics(y_test, y_pred)
+    logging.info(
+        f"Custom metrics – recall_c2: {custom_metrics['recall_c2']:.3f}, "
+        f"precision_c1: {custom_metrics['precision_c1']:.3f}, f1_c0: {custom_metrics['f1_c0']:.3f}"
+    )
+
+    # Calculate per-class F1 scores (existing behaviour)
+    class_f1_scores = precision_recall_fscore_support(y_test, y_pred, average=None, zero_division=0)[2]
     class_f1_dict = {i: f1 for i, f1 in enumerate(class_f1_scores)}
     
+    false_alarm = custom_metrics['false_alarm_rate']
+    missed_threat = custom_metrics['missed_threat_rate']
+
     # Add class F1 scores to the results
     result = {
         'model': search.best_estimator_,
@@ -229,40 +247,14 @@ def train_single_model(model_name, X_train, y_train, X_test, y_test, config, ext
         'cv_time': cv_time,
         'total_time': total_time,
         'f1_ext': f1_ext,
-        'class_f1': class_f1_dict
+        'class_f1': class_f1_dict,
+        'recall_c2': custom_metrics['recall_c2'],
+        'precision_c1': custom_metrics['precision_c1'],
+        'f1_c0': custom_metrics['f1_c0'],
+        'custom_score': custom_metrics['custom_score'],
+        'false_alarm_rate': false_alarm,
+        'missed_threat_rate': missed_threat
     }
-    
-    # ------------------------------------------------------------
-    # Log misclassified examples (max 50 per class per model)
-    # ------------------------------------------------------------
-    misclassified_examples = {}
-    for true_class in range(3):
-        for pred_class in range(3):
-            if true_class != pred_class:
-                mask = (y_test == true_class) & (y_pred == pred_class)
-                if mask.any():
-                    misclassified_texts = [X_test[i] for i in np.where(mask)[0][:50]]  # Max 50 per confusion
-                    key = f"true_{true_class}_predicted_{pred_class}"
-                    misclassified_examples[key] = misclassified_texts
-    
-    # Save misclassified examples
-    misclassified_path = os.path.join('results', 'results_misclassification.json')
-    try:
-        if os.path.exists(misclassified_path):
-            with open(misclassified_path, 'r') as f:
-                all_misclassified = json.load(f)
-        else:
-            all_misclassified = {}
-        
-        all_misclassified[model_name] = {
-            "model_type": "traditional_ml",
-            "misclassified_examples": misclassified_examples
-        }
-        
-        with open(misclassified_path, 'w') as f:
-            json.dump(all_misclassified, f, indent=2)
-    except Exception as e:
-        logging.warning(f"Failed to save misclassified examples for {model_name}: {e}")
     
     return result
 
@@ -308,6 +300,12 @@ def train_and_evaluate_models(data_dict, config, ext_data=None):
                     str(result['best_params']),
                     'success',
                     f"{result['f1_ext']:.4f}",
+                    f"{result['precision_c1']:.4f}",
+                    f"{result['recall_c2']:.4f}",
+                    f"{result['f1_c0']:.4f}",
+                    f"{result['custom_score']:.4f}",
+                    f"{result['false_alarm_rate']:.4f}",
+                    f"{result['missed_threat_rate']:.4f}",
                     f"{result['class_f1']}"
                 ])
             
@@ -330,13 +328,12 @@ def train_and_evaluate_models(data_dict, config, ext_data=None):
                 writer = csv.writer(f)
                 writer.writerow([
                     model_name,
-                    '0',
-                    '0',
-                    '0',
-                    '0',
+                    '0','0','0','0',
                     '{}',
                     f'error: {str(e)}',
-                    'nan'
+                    'nan','0','0','0','0','{}',
+                    '0','0','0',
+                    '{}'
                 ])
     
     # Summary

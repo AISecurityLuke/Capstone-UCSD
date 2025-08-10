@@ -25,6 +25,8 @@ from models.utils.model_manager import model_manager
 # -----------------------------------------------------------------------------
 
 from utils.cv_helpers import create_group_folds
+from utils.focal_loss import TorchFocalLoss
+from utils.metrics import compute_custom_metrics
 
 
 def _aggregate_cv_results(results):
@@ -37,7 +39,7 @@ def _aggregate_cv_results(results):
 # Core training logic
 # -----------------------------------------------------------------------------
 
-TRANSFORMER_TYPES = {"bert", "distilbert", "roberta", "albert", "distilroberta", "bert_large", "roberta_large"}
+TRANSFORMER_TYPES = {"bert", "distilbert", "roberta", "albert", "distilroberta", "bert_large", "roberta_large", "xlm_roberta", "xlm_roberta_large", "distilxlm_roberta"}
 
 
 def compute_metrics(eval_pred):
@@ -149,8 +151,7 @@ def train_single_transformer(model_key: str,
         num_train_epochs=config.get('transformers', {}).get('max_epochs', 3),
         per_device_train_batch_size=config.get('transformers', {}).get('batch_size', 8),
         per_device_eval_batch_size=config.get('transformers', {}).get('batch_size', 8),
-        eval_strategy="epoch",
-        logging_strategy="epoch",
+        evaluation_strategy="epoch",
         save_strategy="epoch",
         load_best_model_at_end=True,
         metric_for_best_model="f1",
@@ -177,25 +178,27 @@ def train_single_transformer(model_key: str,
     # Custom Trainer with class-weighted loss
     # --------------------------------------------------------------
     class WeightedTrainer(Trainer):
-        def __init__(self, *args, class_weights_tensor=None, **kwargs):
+        def __init__(self, *args, class_weights_tensor=None, use_focal=False, focal_gamma=2.0, **kwargs):
             super().__init__(*args, **kwargs)
             self.class_weights_tensor = class_weights_tensor
+            self.use_focal = use_focal
+            self.focal_gamma = focal_gamma
 
         def compute_loss(self, model, inputs, return_outputs=False, **kwargs):
             labels = inputs.get("labels")
             outputs = model(**inputs)
             logits = outputs.logits
-            if logits.device.type == "mps":
-                # MPS backend ignores weight tensor – compute weighted loss on CPU instead
-                cpu_logits = logits.detach().to("cpu")
-                cpu_labels = labels.detach().to("cpu")
-                loss_fct = nn.CrossEntropyLoss(weight=self.class_weights_tensor.to("cpu"))
-                loss = loss_fct(cpu_logits.view(-1, cpu_logits.shape[-1]), cpu_labels.view(-1))
-                # bring loss back to original device for backward pass
-                loss = loss.to(logits.device)
+
+            if self.use_focal:
+                focal_loss_fn = TorchFocalLoss(gamma=self.focal_gamma, alpha=self.class_weights_tensor)
+                loss = focal_loss_fn(logits, labels)
             else:
-                loss_fct = nn.CrossEntropyLoss(weight=self.class_weights_tensor.to(logits.device))
-                loss = loss_fct(logits.view(-1, logits.shape[-1]), labels.view(-1))
+                if logits.device.type == "mps":
+                    loss_fct = nn.CrossEntropyLoss()
+                    loss = loss_fct(logits.view(-1, logits.shape[-1]), labels.view(-1))
+                else:
+                    loss_fct = nn.CrossEntropyLoss(weight=self.class_weights_tensor.to(logits.device))
+                    loss = loss_fct(logits.view(-1, logits.shape[-1]), labels.view(-1))
             return (loss, outputs) if return_outputs else loss
 
     # Use DataCollatorWithPadding to ensure consistent sequence lengths
@@ -208,6 +211,8 @@ def train_single_transformer(model_key: str,
         eval_dataset=eval_dataset,
         compute_metrics=compute_metrics,
         class_weights_tensor=class_weights_tensor.to(model.device),
+        use_focal=config.get('transformers', {}).get('loss_function', 'cross_entropy').lower() == 'focal',
+        focal_gamma=config.get('transformers', {}).get('focal_gamma', 2.0),
         data_collator=data_collator,
     )
 
@@ -253,6 +258,15 @@ def train_single_transformer(model_key: str,
     precision, recall, f1, _ = precision_recall_fscore_support(
         y_test, y_pred, average="macro"
     )
+    
+    # Custom metrics per requirements
+    custom_metrics = compute_custom_metrics(y_test, y_pred)
+    logging.info(
+        f"[{model_key}] Custom metrics – recall_c2={custom_metrics['recall_c2']:.3f} "
+        f"precision_c1={custom_metrics['precision_c1']:.3f} f1_c0={custom_metrics['f1_c0']:.3f} "
+        f"critical_misclass={custom_metrics['critical_misclass_rate']:.3f}"
+    )
+    
     # ROC-AUC (macro, OVR)
     try:
         y_test_binarized = label_binarize(y_test, classes=np.unique(y_test))
@@ -286,6 +300,10 @@ def train_single_transformer(model_key: str,
         except Exception as e:
             logging.warning(f"{model_key}: external validation failed – {e}")
 
+    per_class_f1 = [report[str(cls)]['f1-score'] for cls in sorted([int(c) for c in report.keys() if str(c).isdigit()])]
+    false_alarm = custom_metrics['false_alarm_rate']
+    missed_threat = custom_metrics['missed_threat_rate']
+
     return {
         "precision": precision,
         "recall": recall,
@@ -293,6 +311,17 @@ def train_single_transformer(model_key: str,
         "roc_auc": roc_auc,
         "accuracy": accuracy,
         "f1_ext": f1_ext,
+        "per_class_f1": per_class_f1,
+        "trainer": trainer,
+        "model": model,
+        "tokenizer": tokenizer,
+        "precision_c1": custom_metrics['precision_c1'],
+        "recall_c2": custom_metrics['recall_c2'],
+        "f1_c0": custom_metrics['f1_c0'],
+        "custom_score": custom_metrics['custom_score'],
+        "critical_misclass_rate": custom_metrics['critical_misclass_rate'],
+        "false_alarm_rate": false_alarm,
+        "missed_threat_rate": missed_threat
     }
 
 
@@ -376,44 +405,7 @@ def train_and_evaluate_transformer_models(data_dict: Dict, config: Dict, ext_dat
             else:
                 best_res['f1_ext'] = float('nan')
 
-            # Calculate per-class F1 scores
-            class_f1_scores = precision_recall_fscore_support(y_test, y_pred, average=None)[2]
-            class_f1_dict = {i: f1 for i, f1 in enumerate(class_f1_scores)}
-            
-            # Add class F1 scores to the results
-            best_res['class_f1'] = class_f1_dict
-            
-            # ------------------------------------------------------------
-            # Log misclassified examples (max 50 per class per model)
-            # ------------------------------------------------------------
-            misclassified_examples = {}
-            for true_class in range(3):
-                for pred_class in range(3):
-                    if true_class != pred_class:
-                        mask = (y_test == true_class) & (y_pred == pred_class)
-                        if mask.any():
-                            misclassified_texts = [X_test[i] for i in np.where(mask)[0][:50]]  # Max 50 per confusion
-                            key = f"true_{true_class}_predicted_{pred_class}"
-                            misclassified_examples[key] = misclassified_texts
-            
-            # Save misclassified examples
-            misclassified_path = os.path.join('results', 'results_misclassification.json')
-            try:
-                if os.path.exists(misclassified_path):
-                    with open(misclassified_path, 'r') as f:
-                        all_misclassified = json.load(f)
-                else:
-                    all_misclassified = {}
-                
-                all_misclassified[model_key] = {
-                    "model_type": "huggingface_transformer",
-                    "misclassified_examples": misclassified_examples
-                }
-                
-                with open(misclassified_path, 'w') as f:
-                    json.dump(all_misclassified, f, indent=2)
-            except Exception as e:
-                logging.warning(f"Failed to save misclassified examples for {model_key}: {e}")
+            # per_class_f1 already computed inside train_single_transformer as list
 
             with open(results_path, mode="a", newline="") as f:
                 writer = csv.writer(f)
@@ -426,7 +418,13 @@ def train_and_evaluate_transformer_models(data_dict: Dict, config: Dict, ext_dat
                     str(config.get('model_architectures', {}).get(model_key, 'hf_transformer')),
                     "success",
                     f"{best_res['f1_ext']:.4f}",
-                    f"{best_res['class_f1']}"
+                    f"{best_res.get('precision_c1', 0):.4f}",
+                    f"{best_res.get('recall_c2', 0):.4f}",
+                    f"{best_res.get('f1_c0', 0):.4f}",
+                    f"{best_res.get('custom_score', 0):.4f}",
+                    f"{best_res.get('false_alarm_rate', 0):.4f}",
+                    f"{best_res.get('missed_threat_rate', 0):.4f}",
+                    json.dumps(best_res.get('per_class_f1', []))
                 ])
 
             logging.info(f"{model_key}: CV mean_f1={mean_f1:.4f} ± {std_f1:.4f} – Best fold F1={best_res['f1']:.4f}")
