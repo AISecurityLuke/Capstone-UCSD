@@ -194,7 +194,7 @@ def create_clean_results_csv():
     
     with open(results_path, mode='w', newline='') as f:
         # Added f1_external column for blind-set evaluation
-        f.write('model,precision_macro,recall_macro,f1_macro,roc_auc,best_params,status,f1_external,per_class_f1\n')
+        f.write('model,precision_macro,recall_macro,f1_macro,roc_auc,best_params,status,f1_external,precision_c1,recall_c2,f1_c0,custom_score,false_alarm_rate,missed_threat_rate,per_class_f1\n')
     
     logging.info("Created clean results CSV: results/results.csv")
 

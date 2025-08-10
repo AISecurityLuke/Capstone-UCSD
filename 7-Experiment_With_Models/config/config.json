@@ -5,10 +5,10 @@
   "detailed_logging": true,
   "max_train_samples": null,
   "enable_dl": true,
-  "architecture_search": true,
+  "architecture_search": false,
   "adaptive_training": true,
   "use_class_weights": true,
-  "class_weights": [2, 1.7, 0.8],
+  "class_weights": [1, 1, 1.5],
   
   "preprocessing": {
     "text_cleaning": {
@@ -22,9 +22,9 @@
       "truncation": "post"
     },
     "embeddings": {
-      "vocab_size": 25000,
+      "vocab_size": 20000,
       "embedding_dim": 256,
-      "max_features": 25000
+      "max_features": 20000
     },
     "augmentation": {
       "enable": false,
@@ -34,18 +34,20 @@
   
   "traditional_ml": {
     "models": [
-
       "random_forest"
     ],
     "disabled": [
+      
+      "logistic_regression",
       "svm",
       "naive_bayes",
-      "logistic_regression",
       "xgboost"
     ],
     "cv_folds": 4,
     "n_jobs": -1,
-    "timeout": 1200
+    "timeout": 1200,
+    "max_depth_grid": [10, 20],
+    "min_samples_split_grid": [2, 5, 10]
   },
   
   "deep_learning": {
@@ -54,33 +56,37 @@
       "cnn"
     ],
     "disabled": [
+      "lstm",
       "bilstm",
       "transformer",
-      "hybrid",
-      "lstm"
+      "hybrid"
     ],
-    "max_epochs": 15,
+    "max_epochs": 25,
     "batch_size": 64,
     "learning_rate": 0.0001,
+    "loss_function": "focal",
+    "focal_gamma": 3.0,
+    "focal_alpha": [1, 1, 1.5],
     "early_stopping_patience": 5,
     "timeout": 1200,
     "enable_gpu": true,
-    "mixed_precision": true
+    "mixed_precision": false
   },
   
   "transformers": {
     "models": [
-      "distilbert"
-
+      "distilxlm_roberta"
     ],
     "disabled": [
-      "roberta",
       "bert",
+      "bert_large",
+      "distilbert",
+      "roberta",
+      "roberta_large",
       "albert",
       "distilroberta",
-
-      "roberta_large",
-      "bert_large"
+      "xlm_roberta",
+      "xlm_roberta_large"
     ],
     "max_epochs": 15,
     "batch_size": 16,
@@ -92,7 +98,10 @@
     "dataloader_num_workers": 4,
     "dataloader_pin_memory": false,
     "logging_steps": 50,
-    "early_stopping_patience": 3
+    "early_stopping_patience": 3,
+    "loss_function": "focal",
+    "focal_gamma": 3.0,
+    "focal_alpha": [1, 1, 1.5]
   },
   
   "model_architectures": {
@@ -303,8 +312,8 @@
   },
   
   "hyperparameter_optimization": {
-    "enable_optuna": true,
-    "num_trials": 30,
+    "enable_optuna": false,
+    "num_trials": 3,
     "timeout": 1800,
     "search_spaces": {
       "logistic_regression": {

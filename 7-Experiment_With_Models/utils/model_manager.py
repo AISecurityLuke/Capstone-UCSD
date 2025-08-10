@@ -6,7 +6,8 @@ from transformers import (
     BertForSequenceClassification, DistilBertForSequenceClassification,
     RobertaTokenizerFast, RobertaForSequenceClassification,
     AlbertTokenizerFast, AlbertForSequenceClassification,
-    AutoTokenizer, AutoModelForSequenceClassification
+    AutoTokenizer, AutoModelForSequenceClassification,
+    XLMRobertaTokenizerFast, XLMRobertaForSequenceClassification
 )
 import requests
 from utils.monitor import timeout_handler
@@ -43,6 +44,24 @@ class ModelManager:
                 'tokenizer_cls': RobertaTokenizerFast,
                 'model_cls': RobertaForSequenceClassification,
                 'size_mb': 300
+            },
+            'distilxlm_roberta': {
+                'name': 'distil-xlmr-uncased',
+                'tokenizer_cls': AutoTokenizer,
+                'model_cls': AutoModelForSequenceClassification,
+                'size_mb': 270
+            },
+            'xlm_roberta': {
+                'name': 'xlm-roberta-base',
+                'tokenizer_cls': XLMRobertaTokenizerFast,
+                'model_cls': XLMRobertaForSequenceClassification,
+                'size_mb': 550
+            },
+            'xlm_roberta_large': {
+                'name': 'xlm-roberta-large',
+                'tokenizer_cls': XLMRobertaTokenizerFast,
+                'model_cls': XLMRobertaForSequenceClassification,
+                'size_mb': 1250
             }
         }
         self.download_timeout = 600  # 10 minutes
