@@ -70,6 +70,7 @@ class GatewayRequest(ClassifyRequest):
 
 @app.post("/gateway")
 async def gateway(req: GatewayRequest):
+	_maybe_auto_ingest(req.prompt)
 	label, scores, decision = model_service.classify(req.prompt)
 	final_decision = apply_policy(label, decision)
 	if final_decision == "reject":
@@ -279,3 +280,135 @@ async def ui_page():
 async def get_model():
 	import os
 	return {"model_source": os.getenv("MODEL_PATH") or os.getenv("HF_MODEL_ID") or "stub"}
+
+
+# ------------------------------
+# Curation storage and review
+# ------------------------------
+import json, uuid, threading, time
+
+CURATION_DIR = os.path.join(os.path.dirname(__file__), '..', 'curation')
+PENDING_PATH = os.path.abspath(os.path.join(CURATION_DIR, 'pending.jsonl'))
+CLASSIFIED_PATH = os.path.abspath(os.path.join(CURATION_DIR, 'classified.jsonl'))
+REPLACE_PATH = os.path.abspath(os.path.join(CURATION_DIR, 'replace.json'))
+PENDING_MAX = 1000
+PER_CLASS_MAX = 10050
+
+_file_lock = threading.Lock()
+AUTO_INGEST = os.getenv('AUTO_INGEST', 'false').lower() in ('1','true','yes')
+
+
+def _ensure_paths():
+	os.makedirs(os.path.abspath(CURATION_DIR), exist_ok=True)
+	for path in (PENDING_PATH, CLASSIFIED_PATH):
+		if not os.path.exists(path):
+			with open(path, 'w', encoding='utf-8') as f:
+				pass
+
+
+def _append_jsonl(path: str, obj: dict) -> None:
+	with _file_lock:
+		with open(path, 'a', encoding='utf-8') as f:
+			f.write(json.dumps(obj, ensure_ascii=False) + '\n')
+
+
+def _read_jsonl(path: str):
+	with _file_lock:
+		if not os.path.exists(path):
+			return []
+		with open(path, 'r', encoding='utf-8') as f:
+			return [json.loads(line) for line in f if line.strip()]
+
+
+def _write_jsonl(path: str, items):
+	with _file_lock:
+		with open(path, 'w', encoding='utf-8') as f:
+			for it in items:
+				f.write(json.dumps(it, ensure_ascii=False) + '\n')
+
+
+def _pending_count() -> int:
+	return len(_read_jsonl(PENDING_PATH))
+
+
+def _classified_counts():
+	items = _read_jsonl(CLASSIFIED_PATH)
+	counts = {'0':0,'1':0,'2':0}
+	for it in items:
+		lbl = str(it.get('classification'))
+		if lbl in counts:
+			counts[lbl] += 1
+	return counts
+
+
+def _maybe_auto_ingest(prompt: str):
+	if not AUTO_INGEST:
+		return
+	_ensure_paths()
+	pending = _read_jsonl(PENDING_PATH)
+	if len(pending) >= PENDING_MAX:
+		return
+	item = {"id": str(uuid.uuid4()), "user_message": prompt, "timestamp": int(time.time())}
+	_append_jsonl(PENDING_PATH, item)
+
+
+@app.post('/ingest')
+async def ingest(item: dict):
+	"""Body: {"prompt": str}"""
+	prompt = (item or {}).get('prompt')
+	if not isinstance(prompt, str) or not prompt.strip():
+		raise HTTPException(status_code=400, detail='prompt required')
+	_ensure_paths()
+	pending = _read_jsonl(PENDING_PATH)
+	if len(pending) >= PENDING_MAX:
+		raise HTTPException(status_code=400, detail='pending queue full (>=1000)')
+	obj = {"id": str(uuid.uuid4()), "user_message": prompt.strip(), "timestamp": int(time.time())}
+	_append_jsonl(PENDING_PATH, obj)
+	return {"queued": True, "id": obj['id'], "pending": len(pending)+1}
+
+
+@app.get('/review/next')
+async def review_next():
+	_ensure_paths()
+	pending = _read_jsonl(PENDING_PATH)
+	if not pending:
+		return {"item": None, "pending": 0, "counts": _classified_counts()}
+	item = pending[0]
+	return {"item": {"id": item['id'], "user_message": item['user_message']}, "pending": len(pending), "counts": _classified_counts()}
+
+
+@app.post('/review/{item_id}')
+async def review_submit(item_id: str, body: dict):
+	label = str((body or {}).get('label'))
+	if label not in ('0','1','2'):
+		raise HTTPException(status_code=400, detail='label must be 0,1,2')
+	_ensure_paths()
+	pending = _read_jsonl(PENDING_PATH)
+	idx = next((i for i,it in enumerate(pending) if it.get('id')==item_id), None)
+	if idx is None:
+		raise HTTPException(status_code=404, detail='pending item not found')
+	counts = _classified_counts()
+	if counts[label] >= PER_CLASS_MAX:
+		raise HTTPException(status_code=400, detail=f'class {label} cap reached (>{PER_CLASS_MAX})')
+	item = pending.pop(idx)
+	_write_jsonl(PENDING_PATH, pending)
+	_append_jsonl(CLASSIFIED_PATH, {"id": item['id'], "user_message": item['user_message'], "classification": label, "timestamp": int(time.time())})
+	counts[label] += 1
+	return {"classified": True, "pending": len(pending), "counts": counts}
+
+
+@app.get('/export/replace')
+async def export_replace():
+	_ensure_paths()
+	classified = _read_jsonl(CLASSIFIED_PATH)
+	export = [{"user_message": it['user_message'], "classification": str(it['classification'])} for it in classified]
+	with _file_lock:
+		with open(REPLACE_PATH, 'w', encoding='utf-8') as f:
+			json.dump(export, f, ensure_ascii=False, indent=2)
+	return {"wrote": REPLACE_PATH, "count": len(export)}
+
+
+@app.get('/curation/stats')
+async def curation_stats():
+	_ensure_paths()
+	return {"pending": _pending_count(), "counts": _classified_counts()}

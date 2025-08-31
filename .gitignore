@@ -59,6 +59,10 @@ models/*/best_model.keras
 models/*/model.keras
 models/*/vectorizer.pkl
 
+# Ignore the entire Step 7 models directory (tracked via .gitkeep)
+7-Experiment_With_Models/models/**
+!7-Experiment_With_Models/models/.gitkeep
+
 # HuggingFace model files and checkpoints
 models/*/config.json
 models/*/tokenizer.json
