@@ -1,3 +1,58 @@
+Non-Commercial, No-Production License (NCNP) v1.0
+
+Copyright (c) 2024 Luke Johnson
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to use,
+reproduce, and modify the Software solely for NON-COMMERCIAL and
+NON-PRODUCTION purposes, subject to the following conditions:
+
+1. Non-Commercial Only
+   You may not use the Software, in whole or in part, for any Commercial Use.
+   "Commercial Use" means any use intended for or directed toward commercial
+   advantage or monetary compensation, including but not limited to:
+   - selling, licensing, or otherwise monetizing the Software or derivative works;
+   - providing the Software as or within a product or service for which you or a
+     third party receives compensation (including SaaS/hosted services);
+   - using the Software internally in support of commercial activities.
+
+2. No Production Use
+   You may not deploy or use the Software in production or in any environment
+   where it performs operational, customer-facing, safety-critical, or revenue-
+   impacting functions. Permitted use is limited to local evaluation, research,
+   academic/educational use, personal tinkering, and non-commercial demos.
+
+3. Redistribution
+   You may redistribute the Software and modifications in source form only,
+   provided that (a) you include this License in full, (b) you clearly mark any
+   changes you made, and (c) your redistribution complies with Sections 1 and 2.
+
+4. No Trademark or Endorsement
+   This License does not grant permission to use the name, logos, or trademarks
+   of the copyright holder or contributors, nor does it imply endorsement.
+
+5. Termination
+   Any breach of this License automatically terminates your rights under it.
+   Upon termination, you must cease all use and distribution of the Software.
+
+6. Disclaimer of Warranty
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+   SOFTWARE.
+
+7. Indemnity
+   To the maximum extent permitted by law, you agree to defend, indemnify, and
+   hold harmless the authors and copyright holders from and against any claims
+   or liabilities arising out of or related to your use of the Software.
+
+8. Commercial Licensing
+   For a commercial or production license, please contact the copyright holder
+   to obtain separate written permission.
+
 MIT License
 
 Copyright (c) 2025 AISecurityLuke
