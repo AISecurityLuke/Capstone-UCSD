@@ -5,6 +5,7 @@ import os
 import time
 
 from app.service.model_service import ModelService
+from app.curation_store import store as curation_store
 
 app = FastAPI(title="Prompt Filtration API", version="0.1.0")
 
@@ -48,6 +49,9 @@ async def classify_prompt(req: ClassifyRequest):
 	try:
 		label, scores, decision = model_service.classify(req.prompt)
 		final_decision = apply_policy(label, decision)
+		# optional auto-ingest
+		if os.getenv("INGEST_UI", "true").lower() in {"1","true","yes"}:
+			curation_store.enqueue(req.prompt)
 		return {"label": label, "scores": scores, "decision": final_decision}
 	except Exception as e:
 		metrics.record((time.time()-t0)*1000.0, error=True)
@@ -123,6 +127,9 @@ class UIClassifyRequest(ClassifyRequest):
 async def ui_classify(req: UIClassifyRequest):
 	label, scores, decision = model_service.classify(req.prompt)
 	final_decision = apply_policy(label, decision)
+	# auto-ingest UI prompts
+	if os.getenv("INGEST_UI", "true").lower() in {"1","true","yes"}:
+		curation_store.enqueue(req.prompt)
 	return {"label": label, "scores": scores, "decision": final_decision}
 
 
@@ -165,6 +172,25 @@ button { padding: 8px 12px; }
   <h3>Result</h3>
   <pre id=\"out\">(nothing yet)</pre>
 </div>
+
+<div class=\"card\">
+  <h3>Classification Mode</h3>
+  <div id=\"stats\">Pending: <span id=\"stat-pending\">0</span> | 0: <span id=\"stat-c0\">0</span> | 1: <span id=\"stat-c1\">0</span> | 2: <span id=\"stat-c2\">0</span></div>
+  <div style=\"margin-top:8px;\">
+    <button onclick=\"loadNext()\">Load next</button>
+    <button onclick=\"doExport()\">Export replace.json</button>
+  </div>
+  <div id=\"current-id\" style=\"margin-top:8px; color:#666;\">ID: (none)</div>
+  <textarea id=\"review-prompt\" rows=\"4\" style=\"width:100%\" placeholder=\"No pending item\" readonly></textarea>
+  <div style=\"margin-top:8px;\">
+    <button onclick=\"labelItem('0')\">Label 0 (green)</button>
+    <button onclick=\"labelItem('1')\">Label 1 (yellow)</button>
+    <button onclick=\"labelItem('2')\">Label 2 (red)</button>
+  </div>
+  <div style=\"margin-top:6px; color:#666;\">Shortcuts: 0/1/2 or g/y/r</div>
+  <pre id=\"review-out\"></pre>
+  <div style=\"height:4px\;"></div>
+</div>
 <script>
 async function loadCfg(){
   const r = await fetch('/config');
@@ -191,6 +217,59 @@ async function doClassify(){
   document.getElementById('out').textContent = JSON.stringify(j, null, 2);
 }
 loadCfg();
+
+// Classification mode helpers
+let currentId = null;
+
+function setStats(stats){
+  try{
+    document.getElementById('stat-pending').textContent = stats.pending ?? 0;
+    document.getElementById('stat-c0').textContent = stats.classified_counts?.['0'] ?? 0;
+    document.getElementById('stat-c1').textContent = stats.classified_counts?.['1'] ?? 0;
+    document.getElementById('stat-c2').textContent = stats.classified_counts?.['2'] ?? 0;
+  }catch(e){}
+}
+
+async function loadNext(){
+  const r = await fetch('/review/next');
+  const j = await r.json();
+  setStats(j);
+  const rec = j.record;
+  currentId = rec ? rec.id : null;
+  document.getElementById('current-id').textContent = 'ID: ' + (currentId || '(none)');
+  document.getElementById('review-prompt').value = rec ? rec.prompt : '';
+  document.getElementById('review-out').textContent = '';
+}
+
+async function labelItem(lbl){
+  if(!currentId){
+    document.getElementById('review-out').textContent = 'No item loaded';
+    return;
+  }
+  const r = await fetch('/review/' + currentId, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({label: lbl})});
+  if(!r.ok){
+    const err = await r.json();
+    document.getElementById('review-out').textContent = 'Error: ' + JSON.stringify(err);
+    return;
+  }
+  const j = await r.json();
+  setStats(j);
+  document.getElementById('review-out').textContent = JSON.stringify(j, null, 2);
+  await loadNext();
+}
+
+async function doExport(){
+  const r = await fetch('/export/replace');
+  const j = await r.json();
+  document.getElementById('review-out').textContent = 'Exported: ' + j.path + ' (' + j.count + ' items)';
+}
+
+document.addEventListener('keydown', (e)=>{
+  const k = (e.key || '').toLowerCase();
+  if(k==='0' || k==='g') return labelItem('0');
+  if(k==='1' || k==='y') return labelItem('1');
+  if(k==='2' || k==='r') return labelItem('2');
+});
 </script>
 </body>
 </html>
@@ -200,6 +279,124 @@ loadCfg();
 @app.get("/ui", response_class=HTMLResponse)
 async def ui_page():
 	return HTMLResponse(content=UI_HTML)
+
+
+# Curation API
+class IngestRequest(BaseModel):
+	prompt: str
+
+
+@app.post("/ingest")
+async def ingest(rec: IngestRequest):
+	ok, info = curation_store.enqueue(rec.prompt)
+	if not ok:
+		raise HTTPException(status_code=400, detail=info)
+	return {"enqueued": True, **info, **curation_store.stats()}
+
+
+@app.get("/review/next")
+async def review_next():
+	rec = curation_store.next_unclassified()
+	return {"record": rec, **curation_store.stats()}
+
+
+class ReviewRequest(BaseModel):
+	label: str
+
+
+@app.post("/review/{rec_id}")
+async def review_commit(rec_id: str, body: ReviewRequest):
+	ok, info = curation_store.classify(rec_id, body.label)
+	if not ok:
+		raise HTTPException(status_code=400, detail=info)
+	return {"classified": True, **info, **curation_store.stats()}
+
+
+@app.get("/export/replace")
+async def export_replace():
+	res = curation_store.export_replace()
+	return res
+
+
+# Simple reviewer UI (separate page for demos)
+REVIEW_HTML = """
+<!doctype html>
+<html>
+<head>
+<meta charset=\"utf-8\" />
+<title>Manual Reviewer</title>
+<style>
+body{font-family:system-ui,sans-serif;max-width:1000px;margin:20px auto}
+.row{display:flex;gap:16px}
+.col{flex:1}
+textarea{width:100%;height:140px}
+table{width:100%;border-collapse:collapse;margin-top:8px}
+th,td{border:1px solid #ddd;padding:6px}
+button{padding:6px 10px}
+</style>
+</head>
+<body>
+<h2>Manual Reviewer</h2>
+<div>Use this page to browse a list of pending prompts and assign labels quickly.</div>
+<div class=\"row\" style=\"margin-top:12px\"> 
+  <div class=\"col\">
+    <h3>Pending (top 50)</h3>
+    <div id=\"list\">Loading…</div>
+  </div>
+  <div class=\"col\">
+    <h3>Selected</h3>
+    <div id=\"sel-id\">ID: (none)</div>
+    <textarea id=\"sel-text\" readonly></textarea>
+    <div style=\"margin-top:6px\">
+      <button onclick=\"assign('0')\">Label 0 (green)</button>
+      <button onclick=\"assign('1')\">Label 1 (yellow)</button>
+      <button onclick=\"assign('2')\">Label 2 (red)</button>
+    </div>
+    <pre id=\"sel-out\"></pre>
+  </div>
+</div>
+<script>
+let currentId=null;
+async function loadList(){
+  const r = await fetch('/review/list?limit=50');
+  const j = await r.json();
+  const rows = j.items.map(it=>`<tr><td>${it.id}</td><td>${it.ts}</td><td>${it.prompt.replaceAll('<','&lt;')}</td><td><button onclick=\"choose('${it.id}')\">Choose</button></td></tr>`).join('');
+  document.getElementById('list').innerHTML = `<table><thead><tr><th>ID</th><th>ts</th><th>prompt</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+async function choose(id){
+  currentId=id;
+  // fetch next just for stats
+  const r = await fetch('/review/next');
+  const j = await r.json();
+  document.getElementById('sel-id').textContent = 'ID: '+id;
+  const row = await fetch('/review/list?limit=50').then(r=>r.json()).then(j=>j.items.find(it=>it.id===id));
+  document.getElementById('sel-text').value = row?row.prompt:'';
+}
+async function assign(lbl){
+  if(!currentId){ document.getElementById('sel-out').textContent='Pick a row first.'; return; }
+  const r = await fetch('/review/'+currentId, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({label: lbl})});
+  if(!r.ok){ const e = await r.json(); document.getElementById('sel-out').textContent='Error: '+JSON.stringify(e); return; }
+  const j = await r.json();
+  document.getElementById('sel-out').textContent = JSON.stringify(j,null,2);
+  currentId=null; document.getElementById('sel-id').textContent='ID: (none)'; document.getElementById('sel-text').value='';
+  await loadList();
+}
+loadList();
+</script>
+</body>
+</html>
+"""
+
+
+@app.get("/reviewer", response_class=HTMLResponse)
+async def reviewer_page():
+	return HTMLResponse(content=REVIEW_HTML)
+
+
+@app.get("/review/list")
+async def review_list(limit: int = 50):
+	items = curation_store.list_pending(limit=limit)
+	return {"items": items, **curation_store.stats()}
 
 UI_HTML = """
 <!doctype html>
