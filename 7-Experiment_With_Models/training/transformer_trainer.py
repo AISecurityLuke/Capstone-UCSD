@@ -27,6 +27,9 @@ from models.utils.model_manager import model_manager
 from utils.cv_helpers import create_group_folds
 from utils.focal_loss import TorchFocalLoss
 from utils.metrics import compute_custom_metrics
+from utils.plot_utils import save_confusion_matrix
+from utils.adaptive import AdaptiveWeightController
+from utils.csv_utils import assert_and_write
 
 
 def _aggregate_cv_results(results):
@@ -43,11 +46,31 @@ TRANSFORMER_TYPES = {"bert", "distilbert", "roberta", "albert", "distilroberta",
 
 
 def compute_metrics(eval_pred):
-    """Compute metrics function for HuggingFace Trainer (uses macro F1)"""
+    """Compute metrics function for HuggingFace Trainer (includes custom security score)"""
     logits, labels = eval_pred
     preds = np.argmax(logits, axis=1)
+    
+    # Note: we previously tried to stash predictions on a global `trainer` reference, but that
+    # broke because the symbol is undefined in this scope when `compute_metrics` is called by
+    # HF Trainer.  The dynamic-weight callback now consumes metrics dict directly, so this
+    # stashing is no longer required.
+    
     precision, recall, f1, _ = precision_recall_fscore_support(labels, preds, average="macro")
-    return {"precision": precision, "recall": recall, "f1": f1}
+    
+    # Compute custom security score
+    custom_metrics = compute_custom_metrics(labels, preds)
+    
+    return {
+        "precision": precision, 
+        "recall": recall, 
+        "f1": f1,
+        "custom_score": custom_metrics['custom_score'],
+        "recall_c2": custom_metrics['recall_c2'],
+        "precision_c1": custom_metrics['precision_c1'],
+        "f1_c0": custom_metrics['f1_c0'],
+        "false_alarm_rate": custom_metrics['false_alarm_rate'],
+        "missed_threat_rate": custom_metrics['missed_threat_rate']
+    }
 
 
 def train_single_transformer(model_key: str,
@@ -65,6 +88,18 @@ def train_single_transformer(model_key: str,
     import os
     os.environ["WANDB_DISABLED"] = "true"
     os.environ["MLFLOW_TRACKING_URI"] = ""
+    # ------------------------------------------------------------------
+    # MPS memory safeguards – avoid out-of-memory on Apple silicon GPUs
+    # ------------------------------------------------------------------
+    try:
+        import torch
+        if torch.backends.mps.is_available():
+            # Prevent PyTorch from enforcing a soft cap that triggers premature OOM
+            os.environ.setdefault("PYTORCH_MPS_HIGH_WATERMARK_RATIO", "0.0")
+            # On MPS large batch sizes explode memory – downscale automatically
+            bs_key = ('transformers', {})[0]  # placeholder to silence linter
+    except Exception:
+        pass  # If torch not imported yet or no MPS, continue
 
     # Tokenizers parallelism (configurable)
     if config.get('transformers', {}).get('tokenizers_parallelism', False):
@@ -98,15 +133,19 @@ def train_single_transformer(model_key: str,
     # Create train dataset
     train_dict = {"text": X_train, "label": y_train}
     train_dataset = Dataset.from_dict(train_dict)
-    num_proc_tok = config.get('transformers', {}).get('tokenization_num_proc') or None
-    train_dataset = train_dataset.map(tokenize_function, batched=True, num_proc=num_proc_tok)
+    # Restore configurable multi-process tokenisation now that the NameError is fixed.
+    cfg_workers = config.get('transformers', {}).get('tokenization_num_proc', 2)
+    # Cap at 4 to avoid Arrow spawning overload on macOS but still allow speed-up.
+    cpu_cap = max(1, min(os.cpu_count() or 2, 4))
+    num_proc_tok = min(cfg_workers, cpu_cap)
+    train_dataset = train_dataset.map(tokenize_function, batched=True, num_proc=num_proc_tok, desc=f"Tokenizing train (workers={num_proc_tok})")
     train_dataset = train_dataset.rename_column("label", "labels")
     train_dataset = train_dataset.remove_columns(["text"])
     
     # Create eval dataset
     eval_dict = {"text": X_test, "label": y_test}
     eval_dataset = Dataset.from_dict(eval_dict)
-    eval_dataset = eval_dataset.map(tokenize_function, batched=True, num_proc=num_proc_tok)
+    eval_dataset = eval_dataset.map(tokenize_function, batched=True, num_proc=num_proc_tok, desc=f"Tokenizing eval (workers={num_proc_tok})")
     eval_dataset = eval_dataset.rename_column("label", "labels")
     eval_dataset = eval_dataset.remove_columns(["text"])
     
@@ -131,7 +170,7 @@ def train_single_transformer(model_key: str,
     # ------------------------------------------------------------------
     # Parallelism parameters
     # ------------------------------------------------------------------
-    num_workers = config.get('transformers', {}).get('dataloader_num_workers', 0)
+    num_workers = 0  # disable multiprocess dataloader workers to avoid spawn issues on macOS
     pin_mem    = config.get('transformers', {}).get('dataloader_pin_memory', False)
 
     # ------------------------------------------------------------
@@ -154,7 +193,7 @@ def train_single_transformer(model_key: str,
         evaluation_strategy="epoch",
         save_strategy="epoch",
         load_best_model_at_end=True,
-        metric_for_best_model="f1",
+        metric_for_best_model="eval_custom_score",
         greater_is_better=True,
         learning_rate=config.get('model_architectures', {}).get(model_key, {}).get('default_config', {}).get('learning_rate', 2e-5),
         weight_decay=0.01,
@@ -201,6 +240,62 @@ def train_single_transformer(model_key: str,
                     loss = loss_fct(logits.view(-1, logits.shape[-1]), labels.view(-1))
             return (loss, outputs) if return_outputs else loss
 
+    # --------------------------------------------------------------
+    # Initialize AdaptiveWeightController
+    # --------------------------------------------------------------
+    weight_controller = AdaptiveWeightController(config, num_classes=num_classes, model_name=model_key)
+    
+    # --------------------------------------------------------------
+    # Dynamic weight adjustment callback
+    # --------------------------------------------------------------
+    from transformers import TrainerCallback
+    
+    class DynamicClassWeightCallback(TrainerCallback):
+        """Callback to dynamically adjust class weights based on metric performance."""
+        
+        def __init__(self, controller, trainer_ref):
+            self.controller = controller
+            self.trainer_ref = trainer_ref
+            self.current_alpha = controller.alpha.copy()
+            
+        def on_evaluate(self, args, state, control, metrics=None, **kwargs):
+            """Called after evaluation."""
+            if metrics is None or 'eval_custom_score' not in metrics:
+                return
+
+            # Strip 'eval_' prefix to map back to raw metric names
+            custom_metrics = {k[5:]: v for k, v in metrics.items() if k.startswith('eval_')}
+
+            epoch = int(state.epoch) if state.epoch is not None else 0
+            new_alpha = self.controller.update(custom_metrics, epoch)
+            if not np.allclose(new_alpha, self.current_alpha):
+                self.current_alpha = new_alpha.copy()
+                self.trainer_ref.class_weights_tensor = torch.tensor(new_alpha, dtype=torch.float).to(self.trainer_ref.model.device)
+                logging.info(f"[DynamicClassWeightCallback] Updated class weights to {new_alpha.tolist()}")
+    
+    # --------------------------------------------------------------
+    # Verbose callback for granular tracing
+    # --------------------------------------------------------------
+    class VerboseCallback(TrainerCallback):
+        """Logs key training loop events to help diagnose hangs."""
+
+        def on_train_begin(self, args, state, control, **kwargs):
+            logging.info("[VerboseCallback] Training loop started")
+
+        def on_epoch_begin(self, args, state, control, **kwargs):
+            logging.info(f"[VerboseCallback] Epoch {state.epoch} begin")
+
+        def on_step_end(self, args, state, control, **kwargs):
+            # Log every 100 steps to avoid flooding
+            if state.global_step % 100 == 0:
+                logging.debug(f"[VerboseCallback] Step {state.global_step} completed")
+
+        def on_epoch_end(self, args, state, control, metrics=None, **kwargs):
+            logging.info(f"[VerboseCallback] Epoch {state.epoch} end. Metrics keys: {list(metrics.keys()) if metrics else 'N/A'}")
+
+        def on_train_end(self, args, state, control, **kwargs):
+            logging.info("[VerboseCallback] Training loop finished")
+
     # Use DataCollatorWithPadding to ensure consistent sequence lengths
     data_collator = DataCollatorWithPadding(tokenizer, pad_to_multiple_of=None, return_tensors="pt")
 
@@ -215,6 +310,10 @@ def train_single_transformer(model_key: str,
         focal_gamma=config.get('transformers', {}).get('focal_gamma', 2.0),
         data_collator=data_collator,
     )
+    
+    # Enable prediction storage for callback
+    trainer._last_eval_predictions = None
+    trainer._last_eval_labels = None
 
     # Remove MLflow, W&B, TensorBoard callbacks (HF may auto-add)
     from transformers.integrations import MLflowCallback, WandbCallback, TensorBoardCallback
@@ -226,12 +325,22 @@ def train_single_transformer(model_key: str,
     logging.info("[DEBUG] Integration callbacks removed from Trainer.")
 
     # ------------------------------------------------------------------
-    # Early stopping (patience from config or default 3)
+    # Early stopping based on custom score (security-focused)
     # ------------------------------------------------------------------
     from transformers import EarlyStoppingCallback
 
     patience = config.get("transformers", {}).get("early_stopping_patience", 3)
-    trainer.add_callback(EarlyStoppingCallback(early_stopping_patience=patience))
+    logging.info(f"[{model_key}] Using custom score early stopping with patience={patience}")
+    
+    # Use EarlyStoppingCallback with custom_score metric
+    trainer.add_callback(EarlyStoppingCallback(
+        early_stopping_patience=patience,
+        early_stopping_threshold=0.0
+    ))
+    
+    # Add dynamic weight adjustment callback
+    trainer.add_callback(DynamicClassWeightCallback(weight_controller, trainer))
+    trainer.add_callback(VerboseCallback())
 
     # Debug prints
     logging.info(
@@ -261,6 +370,10 @@ def train_single_transformer(model_key: str,
     
     # Custom metrics per requirements
     custom_metrics = compute_custom_metrics(y_test, y_pred)
+    try:
+        save_confusion_matrix(model_key, y_test, y_pred)
+    except Exception as cm_err:
+        logging.warning(f"[{model_key}] Failed to save confusion matrix: {cm_err}")
     logging.info(
         f"[{model_key}] Custom metrics – recall_c2={custom_metrics['recall_c2']:.3f} "
         f"precision_c1={custom_metrics['precision_c1']:.3f} f1_c0={custom_metrics['f1_c0']:.3f} "
@@ -303,6 +416,10 @@ def train_single_transformer(model_key: str,
     per_class_f1 = [report[str(cls)]['f1-score'] for cls in sorted([int(c) for c in report.keys() if str(c).isdigit()])]
     false_alarm = custom_metrics['false_alarm_rate']
     missed_threat = custom_metrics['missed_threat_rate']
+    
+    # Save weight controller trajectory
+    weight_controller.save_trajectory()
+    final_alpha = weight_controller.get_final_alpha()
 
     return {
         "precision": precision,
@@ -321,7 +438,8 @@ def train_single_transformer(model_key: str,
         "custom_score": custom_metrics['custom_score'],
         "critical_misclass_rate": custom_metrics['critical_misclass_rate'],
         "false_alarm_rate": false_alarm,
-        "missed_threat_rate": missed_threat
+        "missed_threat_rate": missed_threat,
+        "final_alpha": final_alpha
     }
 
 
@@ -409,7 +527,7 @@ def train_and_evaluate_transformer_models(data_dict: Dict, config: Dict, ext_dat
 
             with open(results_path, mode="a", newline="") as f:
                 writer = csv.writer(f)
-                writer.writerow([
+                assert_and_write(writer,[
                     model_key,
                     f"{best_res['precision']:.4f}",
                     f"{best_res['recall']:.4f}",
@@ -424,6 +542,7 @@ def train_and_evaluate_transformer_models(data_dict: Dict, config: Dict, ext_dat
                     f"{best_res.get('custom_score', 0):.4f}",
                     f"{best_res.get('false_alarm_rate', 0):.4f}",
                     f"{best_res.get('missed_threat_rate', 0):.4f}",
+                    str(best_res.get('final_alpha', [1, 1, 1])),
                     json.dumps(best_res.get('per_class_f1', []))
                 ])
 

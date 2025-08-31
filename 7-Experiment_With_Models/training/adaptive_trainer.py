@@ -10,6 +10,7 @@ import numpy as np
 import sys
 import time
 import csv
+from utils.csv_utils import assert_and_write
 from typing import Dict, List, Any, Tuple
 
 # ------------------------------------------------------------
@@ -27,6 +28,9 @@ CONFIG_GLOBAL = load_config()
 # Disable GPU if requested BEFORE tensorflow import
 if not CONFIG_GLOBAL.get('deep_learning', {}).get('enable_gpu', True):
     os.environ['CUDA_VISIBLE_DEVICES'] = ''
+
+# Import AdaptiveWeightController
+from utils.adaptive import AdaptiveWeightController
 
 # Only now import heavy libs (tensorflow, torch…)
 import tensorflow as tf
@@ -61,6 +65,7 @@ from utils.monitor import monitor
 import pickle
 from utils.focal_loss import get_keras_focal_loss
 from utils.metrics import compute_custom_metrics
+from utils.plot_utils import save_confusion_matrix
 
 # Ensure report dir
 os.makedirs(os.path.join('results', 'reports'), exist_ok=True)
@@ -273,6 +278,9 @@ def train_adaptive_model(model, X_train, y_train, X_test, y_test, model_name, co
     # Setup adaptive training controller
     controller = AdaptiveTrainingController(config)
     
+    # Setup adaptive weight controller
+    weight_controller = AdaptiveWeightController(config, num_classes=3, model_name=model_name)
+    
     # --------------------------------------------------------------
     # Optimizer / learning-rate handling
     # --------------------------------------------------------------
@@ -307,51 +315,73 @@ def train_adaptive_model(model, X_train, y_train, X_test, y_test, model_name, co
     callbacks = []
 
     # --------------------------------------------------------------
-    # F1 metric callback so that 'val_f1_macro' exists for monitoring
+    # Custom metrics callback for security-focused monitoring with adaptive weights
     # --------------------------------------------------------------
-    class F1MetricsCallback(keras.callbacks.Callback):
-        """Compute macro-F1 on validation set at each epoch end."""
-        def __init__(self, X_val, y_val):
+    class CustomMetricsCallback(keras.callbacks.Callback):
+        """Compute both F1-macro and custom security score on validation set at each epoch end."""
+        def __init__(self, X_val, y_val, weight_ctrl, config):
             super().__init__()
             self.X_val = X_val
             self.y_val = y_val
+            self.weight_controller = weight_ctrl
+            self.config = config
+            self.current_alpha = weight_ctrl.alpha.copy()
 
         def on_epoch_end(self, epoch, logs=None):
             logs = logs or {}
             y_pred = np.argmax(self.model.predict(self.X_val, verbose=0), axis=1)
+            
+            # Compute both F1-macro and custom score
             f1_macro = f1_score(self.y_val, y_pred, average='macro')
+            custom_metrics = compute_custom_metrics(self.y_val, y_pred)
+            custom_score = custom_metrics['custom_score']
+            
             logs['val_f1_macro'] = f1_macro
-            print(f"Epoch {epoch+1}: val_f1_macro={f1_macro:.4f}")
+            logs['val_custom_score'] = custom_score
+            print(f"Epoch {epoch+1}: val_f1_macro={f1_macro:.4f}, val_custom_score={custom_score:.4f}")
+            
+            # Update weights based on metrics
+            new_alpha = self.weight_controller.update(custom_metrics, epoch + 1)
+            
+            # If alpha changed, update the loss function
+            if not np.allclose(new_alpha, self.current_alpha):
+                self.current_alpha = new_alpha.copy()
+                logging.info(f"[CustomMetricsCallback] New alpha scheduled (will take effect next fit call): {new_alpha.tolist()}")
 
-    callbacks.append(F1MetricsCallback(X_test_padded, y_test))
+    callbacks.append(CustomMetricsCallback(X_test_padded, y_test, weight_controller, config))
 
-    # Early stopping (now sees val_f1_macro)
+    # Early stopping based on custom score (security-focused)
     early_stopping_config = config.get('training_callbacks', {}).get('early_stopping', {})
+    monitor_metric = early_stopping_config.get('monitor', 'val_custom_score')
+    patience = early_stopping_config.get('patience', 5)
+    logging.info(f"[{model_name}] Early stopping configured: monitor='{monitor_metric}', patience={patience}")
+    
     callbacks.append(EarlyStopping(
-        patience=early_stopping_config.get('patience', 5),
+        patience=patience,
         restore_best_weights=early_stopping_config.get('restore_best_weights', True),
-        monitor=early_stopping_config.get('monitor', 'val_f1_macro'),
+        monitor=monitor_metric,
         mode='max',
         min_delta=early_stopping_config.get('min_delta', 0.0)
     ))
 
-    # Learning rate scheduler
+    # Learning rate scheduler based on custom score
     lr_config = config.get('training_callbacks', {}).get('learning_rate_scheduler', {})
     callbacks.append(ReduceLROnPlateau(
-        monitor=lr_config.get('monitor', 'val_f1_macro'),
+        monitor=lr_config.get('monitor', 'val_custom_score'),  # Changed to custom score
         mode='max',
         factor=lr_config.get('factor', 0.5),
         patience=lr_config.get('patience', 3),
         min_lr=lr_config.get('min_lr', 1e-7)
     ))
     
-    # Model checkpoint
+    # Model checkpoint based on custom score
     checkpoint_config = config.get('training_callbacks', {}).get('model_checkpoint', {})
     callbacks.append(ModelCheckpoint(
-        f'models/{model_name}/best_model.keras',
+        filepath=f'models/{model_name}/best.weights.h5',
         save_best_only=checkpoint_config.get('save_best_only', True),
-        monitor=checkpoint_config.get('monitor', 'val_f1_macro'),
-        mode='max'
+        monitor=checkpoint_config.get('monitor', 'val_custom_score'),  # Changed to custom score
+        mode='max',
+        save_weights_only=True  # avoid serialising custom loss functions
     ))
     
     # Adaptive callback
@@ -398,6 +428,10 @@ def train_adaptive_model(model, X_train, y_train, X_test, y_test, model_name, co
         f"[{model_name}] Custom metrics – recall_c2={custom_metrics['recall_c2']:.3f} "
         f"precision_c1={custom_metrics['precision_c1']:.3f} f1_c0={custom_metrics['f1_c0']:.3f}"
     )
+    try:
+        save_confusion_matrix(model_name, y_test, y_pred)
+    except Exception as cm_err:
+        logging.warning(f"[{model_name}] Failed to save confusion matrix: {cm_err}")
     
     # Debug: Log the discrepancy between training val_f1_macro and final evaluation
     if 'val_f1_macro' in history.history:
@@ -444,6 +478,10 @@ def train_adaptive_model(model, X_train, y_train, X_test, y_test, model_name, co
     with open(tokenizer_path, 'wb') as f:
         pickle.dump(tokenizer, f)
     
+    # Save weight controller trajectory
+    weight_controller.save_trajectory()
+    final_alpha = weight_controller.get_final_alpha()
+    
     return {
         'model': model,
         'tokenizer': tokenizer,
@@ -462,7 +500,8 @@ def train_adaptive_model(model, X_train, y_train, X_test, y_test, model_name, co
         'f1_c0': custom_metrics['f1_c0'],
         'custom_score': custom_metrics['custom_score'],
         'false_alarm_rate': custom_metrics['false_alarm_rate'],
-        'missed_threat_rate': custom_metrics['missed_threat_rate']
+        'missed_threat_rate': custom_metrics['missed_threat_rate'],
+        'final_alpha': final_alpha
     }
 
 def train_and_evaluate_deep_models(data_dict, config, ext_data=None):
@@ -499,7 +538,7 @@ def train_and_evaluate_deep_models(data_dict, config, ext_data=None):
                 result = train_hf_transformer_model(model_type, X_train, y_train, X_test, y_test, num_classes, config, data_dict)
                 with open(results_path, mode='a', newline='') as f:
                     writer = csv.writer(f)
-                    writer.writerow([
+                    assert_and_write(writer,[
                         model_type,
                         f"{result['precision']:.4f}",
                         f"{result['recall']:.4f}",
@@ -514,6 +553,7 @@ def train_and_evaluate_deep_models(data_dict, config, ext_data=None):
                         f"{result.get('custom_score', 0):.4f}",
                         f"{result.get('false_alarm_rate', 0):.4f}",
                         f"{result.get('missed_threat_rate', 0):.4f}",
+                        str(result.get('final_alpha', [1, 1, 1])),
                         json.dumps(result.get('per_class_f1', {}))
                     ])
                 successful_models.append(model_type)
@@ -570,11 +610,12 @@ def train_and_evaluate_deep_models(data_dict, config, ext_data=None):
                         # Persist full result for later retrieval
                         trial.set_user_attr("result", result_trial)
                         # Use best val_f1_macro from training for consistency with checkpoint selection
-                        if 'val_f1_macro' in result_trial.get('history', {}):
-                            return max(result_trial['history']['val_f1_macro'])
+                        if 'val_custom_score' in result_trial.get('history', {}):
+                            # Primary optimisation target is now the security-focused custom score
+                            return max(result_trial['history']['val_custom_score'])
                         else:
-                            # Fallback to final holdout F1 if val_f1_macro not available
-                            return result_trial['f1']
+                            # Fallback: use final evaluation custom_score; if even that is missing return 0
+                            return result_trial.get('custom_score', 0.0)
                     except Exception as exc:
                         logging.error(f"{model_type} Optuna trial failed: {exc}")
                         return 0.0  # poor score so Optuna discards it
@@ -589,7 +630,7 @@ def train_and_evaluate_deep_models(data_dict, config, ext_data=None):
                     # Write CSV row
                     with open(results_path, mode='a', newline='') as f:
                         writer = csv.writer(f)
-                        writer.writerow([
+                        assert_and_write(writer,[
                             f"{model_type}_best",
                             f"{best_result['precision']:.4f}",
                             f"{best_result['recall']:.4f}",
@@ -598,18 +639,29 @@ def train_and_evaluate_deep_models(data_dict, config, ext_data=None):
                             str(best_trial.params),
                             'success',
                             f"{best_result['f1_ext']:.4f}",
-                            json.dumps(best_result['per_class_f1']),
+                            f"{best_result.get('precision_c1', 0):.4f}",
+                            f"{best_result.get('recall_c2', 0):.4f}",
+                            f"{best_result.get('f1_c0', 0):.4f}",
+                            f"{best_result.get('custom_score', 0):.4f}",
                             f"{best_result.get('false_alarm_rate', 0):.4f}",
-                            f"{best_result.get('missed_threat_rate', 0):.4f}"
+                            f"{best_result.get('missed_threat_rate', 0):.4f}",
+                            str(best_result.get('final_alpha', [1, 1, 1])),
+                            json.dumps(best_result['per_class_f1'])
                         ])
 
-                    # Save model
+                    # Save model – swallow serialization errors so CSV row is not lost
                     model_dir = os.path.join('models', f"{model_type}_best")
                     os.makedirs(model_dir, exist_ok=True)
-                    best_result['model'].save(os.path.join(model_dir, 'model.keras'))
+                    try:
+                        if 'model' in best_result:
+                            best_result['model'].save(os.path.join(model_dir, 'model.keras'))
+                    except Exception as save_exc:
+                        logging.error(
+                            f"[CSV] {model_type} best model saved in CSV but could not be serialized: {save_exc}"
+                        )
 
                     successful_models.append(f"{model_type}_best")
-                    logging.info(f"{model_type} Optuna best F1={best_result['f1']:.4f} params={best_trial.params}")
+                    logging.info(f"{model_type} Optuna best custom_score={best_result['custom_score']:.4f} params={best_trial.params}")
                 else:
                     logging.error(f"Optuna optimisation for {model_type} produced no valid result")
                     failed_models.append(model_type)
@@ -619,7 +671,7 @@ def train_and_evaluate_deep_models(data_dict, config, ext_data=None):
             logging.info(f"Testing {len(search_space) + 1} different architectures for {model_type}")
             
             best_result = None
-            best_f1 = 0
+            best_custom = 0
             
             # Test default configuration first
             try:
@@ -636,9 +688,9 @@ def train_and_evaluate_deep_models(data_dict, config, ext_data=None):
                     f"{model_type}_default", config, default_config, ext_data
                 )
                 
-                if result and result['f1'] > best_f1:
+                if result and result['custom_score'] > best_custom:
                     best_result = result
-                    best_f1 = result['f1']
+                    best_custom = result['custom_score']
                     
             except Exception as e:
                 logging.error(f"{model_type} default config failed: {e}")
@@ -666,9 +718,9 @@ def train_and_evaluate_deep_models(data_dict, config, ext_data=None):
                         f"{model_type}_arch_{i+1}", config, test_config, ext_data
                     )
                     
-                    if result and result['f1'] > best_f1:
+                    if result and result['custom_score'] > best_custom:
                         best_result = result
-                        best_f1 = result['f1']
+                        best_custom = result['custom_score']
                         
                 except Exception as e:
                     logging.error(f"{model_type} architecture {i+1} failed: {e}")
@@ -678,7 +730,7 @@ def train_and_evaluate_deep_models(data_dict, config, ext_data=None):
                 # Save best model results
                 with open(results_path, mode='a', newline='') as f:
                     writer = csv.writer(f)
-                    writer.writerow([
+                    assert_and_write(writer,[
                         f"{model_type}_best",
                         f"{best_result['precision']:.4f}",
                         f"{best_result['recall']:.4f}",
@@ -693,13 +745,20 @@ def train_and_evaluate_deep_models(data_dict, config, ext_data=None):
                         f"{best_result.get('custom_score', 0):.4f}",
                         f"{best_result.get('false_alarm_rate', 0):.4f}",
                         f"{best_result.get('missed_threat_rate', 0):.4f}",
+                        str(best_result.get('final_alpha', [1, 1, 1])),
                         json.dumps(best_result.get('per_class_f1', {}))
                     ])
                 
-                # Save best model
+                # Save best Keras model (ignore serialization failures)
                 model_dir = os.path.join('models', f"{model_type}_best")
                 os.makedirs(model_dir, exist_ok=True)
-                best_result['model'].save(os.path.join(model_dir, 'model.keras'))
+                try:
+                    if 'model' in best_result:
+                        best_result['model'].save(os.path.join(model_dir, 'model.keras'))
+                except Exception as save_exc:
+                    logging.error(
+                        f"[CSV] {model_type} best model saved in CSV but could not be serialized: {save_exc}"
+                    )
                 
                 successful_models.append(f"{model_type}_best")
                 logging.info(f"Best architecture: {best_result.get('architecture_config', 'N/A')}")
@@ -730,11 +789,17 @@ class TextClassificationDataset(Dataset):
         return item
 
 def compute_metrics(eval_pred):
-    """Compute metrics function for HuggingFace Trainer (uses macro F1)"""
+    """Compute metrics for HuggingFace Trainer including the custom security score."""
     logits, labels = eval_pred
     preds = np.argmax(logits, axis=1)
     precision, recall, f1, _ = precision_recall_fscore_support(labels, preds, average="macro")
-    return {"precision": precision, "recall": recall, "f1": f1}
+    custom = compute_custom_metrics(labels, preds)
+    return {
+        "precision": precision,
+        "recall": recall,
+        "f1": f1,
+        "custom_score": custom["custom_score"],
+    }
 
 
 def train_hf_transformer_model(model_key, X_train, y_train, X_test, y_test, num_classes, config, data_dict=None):
@@ -850,10 +915,9 @@ def train_hf_transformer_model(model_key, X_train, y_train, X_test, y_test, num_
 
             trainer_trial.train()
             eval_res = trainer_trial.evaluate()
-            f1_score_val = eval_res.get('eval_f1') or eval_res.get('f1') or 0.0
-            # Store trainer path for later retrieval if needed
-            trial.set_user_attr('best_metrics', eval_res)
-            return f1_score_val
+            # Use custom_score from evaluation to steer Optuna
+            custom_val = eval_res.get('eval_custom_score') or eval_res.get('custom_score') or 0.0
+            return custom_val
 
         study = optuna.create_study(direction='maximize')
         study.optimize(objective, n_trials=n_trials, timeout=timeout, show_progress_bar=False)

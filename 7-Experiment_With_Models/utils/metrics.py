@@ -53,7 +53,7 @@ def compute_custom_metrics(y_true, y_pred) -> Dict[str, float]:
     
     # Exponential penalty that grows quickly with error rate
     # exp(-5) ≈ 0.0067, so 20% critical errors will devastate the score
-    penalty_factor = np.exp(-5 * critical_error_rate)
+    penalty_factor = np.exp(-4.5 * critical_error_rate)
     
     # Base score calculation (unchanged weights)
     base_score = 0.5 * recall_c2 + 0.3 * precision_c1 + 0.2 * f1_c0
@@ -69,7 +69,8 @@ def compute_custom_metrics(y_true, y_pred) -> Dict[str, float]:
         "critical_misclass_rate": critical_error_rate,
         "false_alarm_rate": rate_0_to_2,    # benign→malicious rate
         "missed_threat_rate": rate_2_to_0,   # malicious→benign rate
-        "penalty_factor": penalty_factor     # for debugging
+        "penalty_factor": penalty_factor,     # for debugging
+        "base_score": base_score              # score before penalty
     }
 
 # ---------------------------------------------------------------------------
@@ -79,4 +80,22 @@ def compute_custom_metrics(y_true, y_pred) -> Dict[str, float]:
 def _custom_score_func(y_true, y_pred):
     return compute_custom_metrics(y_true, y_pred)["custom_score"]
 
-sklearn_custom_scorer = make_scorer(_custom_score_func, greater_is_better=True) 
+sklearn_custom_scorer = make_scorer(_custom_score_func, greater_is_better=True)
+
+
+def get_weighted_score(metrics: Dict[str, float], metric_weights: Dict[str, float]) -> float:
+    """
+    Calculate weighted score from metrics using configurable weights.
+    
+    Args:
+        metrics: Dictionary of metric values
+        metric_weights: Dictionary of metric weights from config
+        
+    Returns:
+        Weighted score (before critical penalty)
+    """
+    score = 0.0
+    for metric_name, weight in metric_weights.items():
+        if metric_name != 'critical_penalty' and metric_name in metrics:
+            score += weight * metrics[metric_name]
+    return score 

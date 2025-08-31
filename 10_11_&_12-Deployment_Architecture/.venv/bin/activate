@@ -37,7 +37,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="/Users/lukejohnson/ljStorage/projects/active/Capstone-UCSD/10-Deployment_Architecture/.venv"
+VIRTUAL_ENV="/Users/lukejohnson/ljStorage/projects/active/Capstone-UCSD/10_11_&_12-Deployment_Architecture/.venv"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"

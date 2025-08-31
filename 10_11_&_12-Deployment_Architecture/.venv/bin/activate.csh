@@ -8,7 +8,7 @@ alias deactivate 'test $?_OLD_VIRTUAL_PATH != 0 && setenv PATH "$_OLD_VIRTUAL_PA
 # Unset irrelevant variables.
 deactivate nondestructive
 
-setenv VIRTUAL_ENV "/Users/lukejohnson/ljStorage/projects/active/Capstone-UCSD/10-Deployment_Architecture/.venv"
+setenv VIRTUAL_ENV "/Users/lukejohnson/ljStorage/projects/active/Capstone-UCSD/10_11_&_12-Deployment_Architecture/.venv"
 
 set _OLD_VIRTUAL_PATH="$PATH"
 setenv PATH "$VIRTUAL_ENV/bin:$PATH"

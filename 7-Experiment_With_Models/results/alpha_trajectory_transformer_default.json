@@ -1,0 +1,157 @@
+{
+  "model": "transformer_default",
+  "initial_alpha": [
+    1.0,
+    1.0499999523162842,
+    1.0
+  ],
+  "final_alpha": [
+    1.3000000715255737,
+    1.350000023841858,
+    1.3000000715255737
+  ],
+  "history": [
+    {
+      "epoch": 0,
+      "alpha": [
+        1.0,
+        1.0499999523162842,
+        1.0
+      ],
+      "reason": "initial"
+    },
+    {
+      "epoch": 2,
+      "alpha": [
+        1.100000023841858,
+        1.149999976158142,
+        1.100000023841858
+      ],
+      "reason": "Off-target metrics: recall_c2, precision_c1, f1_c0",
+      "old_alpha": [
+        1.0,
+        1.0499999523162842,
+        1.0
+      ],
+      "metrics": {
+        "recall_c2": 0.0,
+        "precision_c1": 0.34039006501083513,
+        "f1_c0": 0.0,
+        "custom_score": 0.10211701950325054,
+        "critical_misclass_rate": 0.0,
+        "false_alarm_rate": 0.0,
+        "missed_threat_rate": 0.0,
+        "penalty_factor": 1.0,
+        "base_score": 0.10211701950325054
+      }
+    },
+    {
+      "epoch": 3,
+      "alpha": [
+        1.2000000476837158,
+        1.25,
+        1.2000000476837158
+      ],
+      "reason": "Off-target metrics: recall_c2, precision_c1, f1_c0",
+      "old_alpha": [
+        1.100000023841858,
+        1.149999976158142,
+        1.100000023841858
+      ],
+      "metrics": {
+        "recall_c2": 0.0,
+        "precision_c1": 0.34039006501083513,
+        "f1_c0": 0.0,
+        "custom_score": 0.10211701950325054,
+        "critical_misclass_rate": 0.0,
+        "false_alarm_rate": 0.0,
+        "missed_threat_rate": 0.0,
+        "penalty_factor": 1.0,
+        "base_score": 0.10211701950325054
+      }
+    },
+    {
+      "epoch": 4,
+      "alpha": [
+        1.3000000715255737,
+        1.350000023841858,
+        1.3000000715255737
+      ],
+      "reason": "Off-target metrics: recall_c2, precision_c1, f1_c0",
+      "old_alpha": [
+        1.2000000476837158,
+        1.25,
+        1.2000000476837158
+      ],
+      "metrics": {
+        "recall_c2": 0.0,
+        "precision_c1": 0.34039006501083513,
+        "f1_c0": 0.0,
+        "custom_score": 0.10211701950325054,
+        "critical_misclass_rate": 0.0,
+        "false_alarm_rate": 0.0,
+        "missed_threat_rate": 0.0,
+        "penalty_factor": 1.0,
+        "base_score": 0.10211701950325054
+      }
+    }
+  ],
+  "metric_history": [
+    {
+      "epoch": 1,
+      "metrics": {
+        "recall_c2": 0.0,
+        "precision_c1": 0.34039006501083513,
+        "f1_c0": 0.0,
+        "custom_score": 0.10211701950325054,
+        "critical_misclass_rate": 0.0,
+        "false_alarm_rate": 0.0,
+        "missed_threat_rate": 0.0,
+        "penalty_factor": 1.0,
+        "base_score": 0.10211701950325054
+      }
+    },
+    {
+      "epoch": 2,
+      "metrics": {
+        "recall_c2": 0.0,
+        "precision_c1": 0.34039006501083513,
+        "f1_c0": 0.0,
+        "custom_score": 0.10211701950325054,
+        "critical_misclass_rate": 0.0,
+        "false_alarm_rate": 0.0,
+        "missed_threat_rate": 0.0,
+        "penalty_factor": 1.0,
+        "base_score": 0.10211701950325054
+      }
+    },
+    {
+      "epoch": 3,
+      "metrics": {
+        "recall_c2": 0.0,
+        "precision_c1": 0.34039006501083513,
+        "f1_c0": 0.0,
+        "custom_score": 0.10211701950325054,
+        "critical_misclass_rate": 0.0,
+        "false_alarm_rate": 0.0,
+        "missed_threat_rate": 0.0,
+        "penalty_factor": 1.0,
+        "base_score": 0.10211701950325054
+      }
+    },
+    {
+      "epoch": 4,
+      "metrics": {
+        "recall_c2": 0.0,
+        "precision_c1": 0.34039006501083513,
+        "f1_c0": 0.0,
+        "custom_score": 0.10211701950325054,
+        "critical_misclass_rate": 0.0,
+        "false_alarm_rate": 0.0,
+        "missed_threat_rate": 0.0,
+        "penalty_factor": 1.0,
+        "base_score": 0.10211701950325054
+      }
+    }
+  ]
+}

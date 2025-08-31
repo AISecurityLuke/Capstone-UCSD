@@ -1,0 +1,466 @@
+{
+  "model": "hybrid_optuna_trial",
+  "initial_alpha": [
+    1.0,
+    1.0499999523162842,
+    1.0
+  ],
+  "final_alpha": [
+    2.200000047683716,
+    2.25,
+    1.0
+  ],
+  "history": [
+    {
+      "epoch": 0,
+      "alpha": [
+        1.0,
+        1.0499999523162842,
+        1.0
+      ],
+      "reason": "initial"
+    },
+    {
+      "epoch": 2,
+      "alpha": [
+        1.100000023841858,
+        1.149999976158142,
+        1.0
+      ],
+      "reason": "Off-target metrics: precision_c1, f1_c0",
+      "old_alpha": [
+        1.0,
+        1.0499999523162842,
+        1.0
+      ],
+      "metrics": {
+        "recall_c2": 0.9994931576279777,
+        "precision_c1": 0.5278265963678969,
+        "f1_c0": 0.5381835702240424,
+        "custom_score": 0.7309342692441931,
+        "critical_misclass_rate": 0.01033505584264044,
+        "false_alarm_rate": 0.010168361393565594,
+        "missed_threat_rate": 0.0001666944490748458,
+        "penalty_factor": 0.9545571614901174,
+        "base_score": 0.7657312717691664
+      }
+    },
+    {
+      "epoch": 3,
+      "alpha": [
+        1.2000000476837158,
+        1.25,
+        1.0
+      ],
+      "reason": "Off-target metrics: precision_c1, f1_c0",
+      "old_alpha": [
+        1.100000023841858,
+        1.149999976158142,
+        1.0
+      ],
+      "metrics": {
+        "recall_c2": 0.9994931576279777,
+        "precision_c1": 0.5388291517323776,
+        "f1_c0": 0.5550058892815076,
+        "custom_score": 0.7523816032115151,
+        "critical_misclass_rate": 0.005834305717619603,
+        "false_alarm_rate": 0.005834305717619603,
+        "missed_threat_rate": 0.0,
+        "penalty_factor": 0.9740872739302423,
+        "base_score": 0.7723965021900037
+      }
+    },
+    {
+      "epoch": 4,
+      "alpha": [
+        1.3000000715255737,
+        1.350000023841858,
+        1.0
+      ],
+      "reason": "Off-target metrics: precision_c1, f1_c0",
+      "old_alpha": [
+        1.2000000476837158,
+        1.25,
+        1.0
+      ],
+      "metrics": {
+        "recall_c2": 0.9994931576279777,
+        "precision_c1": 0.5394932935916542,
+        "f1_c0": 0.43844961240310076,
+        "custom_score": 0.7260460816252943,
+        "critical_misclass_rate": 0.007001166861143524,
+        "false_alarm_rate": 0.006834472412068678,
+        "missed_threat_rate": 0.0001666944490748458,
+        "penalty_factor": 0.9689858684165682,
+        "base_score": 0.7492844893721052
+      }
+    },
+    {
+      "epoch": 5,
+      "alpha": [
+        1.4000000953674316,
+        1.4500000476837158,
+        1.0
+      ],
+      "reason": "Off-target metrics: precision_c1, f1_c0",
+      "old_alpha": [
+        1.3000000715255737,
+        1.350000023841858,
+        1.0
+      ],
+      "metrics": {
+        "recall_c2": 0.9994931576279777,
+        "precision_c1": 0.5912011863568957,
+        "f1_c0": 0.5778907242693774,
+        "custom_score": 0.780296044529651,
+        "critical_misclass_rate": 0.0035005834305717617,
+        "false_alarm_rate": 0.003333888981496916,
+        "missed_threat_rate": 0.0001666944490748458,
+        "penalty_factor": 0.9843707982343687,
+        "base_score": 0.7926850795749331
+      }
+    },
+    {
+      "epoch": 6,
+      "alpha": [
+        1.5000001192092896,
+        1.5500000715255737,
+        1.0
+      ],
+      "reason": "Off-target metrics: precision_c1, f1_c0",
+      "old_alpha": [
+        1.4000000953674316,
+        1.4500000476837158,
+        1.0
+      ],
+      "metrics": {
+        "recall_c2": 0.9994931576279777,
+        "precision_c1": 0.5825166601332811,
+        "f1_c0": 0.526564344746163,
+        "custom_score": 0.7636064211030583,
+        "critical_misclass_rate": 0.004667444574095683,
+        "false_alarm_rate": 0.004500750125020837,
+        "missed_threat_rate": 0.0001666944490748458,
+        "penalty_factor": 0.9792155367377771,
+        "base_score": 0.7798144458032058
+      }
+    },
+    {
+      "epoch": 7,
+      "alpha": [
+        1.6000001430511475,
+        1.6500000953674316,
+        1.0
+      ],
+      "reason": "Off-target metrics: precision_c1, f1_c0",
+      "old_alpha": [
+        1.5000001192092896,
+        1.5500000715255737,
+        1.0
+      ],
+      "metrics": {
+        "recall_c2": 0.9979726305119108,
+        "precision_c1": 0.6022146507666098,
+        "f1_c0": 0.5718999175144349,
+        "custom_score": 0.7857356145792143,
+        "critical_misclass_rate": 0.002333722287047841,
+        "false_alarm_rate": 0.0021670278379729954,
+        "missed_threat_rate": 0.0001666944490748458,
+        "penalty_factor": 0.9895532005596147,
+        "base_score": 0.7940306939888254
+      }
+    },
+    {
+      "epoch": 8,
+      "alpha": [
+        1.7000001668930054,
+        1.7500001192092896,
+        1.0
+      ],
+      "reason": "Off-target metrics: precision_c1, f1_c0",
+      "old_alpha": [
+        1.6000001430511475,
+        1.6500000953674316,
+        1.0
+      ],
+      "metrics": {
+        "recall_c2": 0.9974657881398885,
+        "precision_c1": 0.6377142857142857,
+        "f1_c0": 0.6332939787485242,
+        "custom_score": 0.8081740120057676,
+        "critical_misclass_rate": 0.002333722287047841,
+        "false_alarm_rate": 0.0021670278379729954,
+        "missed_threat_rate": 0.0001666944490748458,
+        "penalty_factor": 0.9895532005596147,
+        "base_score": 0.8167059755339348
+      }
+    },
+    {
+      "epoch": 9,
+      "alpha": [
+        1.8000001907348633,
+        1.8500001430511475,
+        1.0
+      ],
+      "reason": "Off-target metrics: precision_c1, f1_c0",
+      "old_alpha": [
+        1.7000001668930054,
+        1.7500001192092896,
+        1.0
+      ],
+      "metrics": {
+        "recall_c2": 0.9944247339077547,
+        "precision_c1": 0.6104702750665484,
+        "f1_c0": 0.5927505330490405,
+        "custom_score": 0.7959127804953648,
+        "critical_misclass_rate": 0.000833472245374229,
+        "false_alarm_rate": 0.0006667777962993832,
+        "missed_threat_rate": 0.0001666944490748458,
+        "penalty_factor": 0.9962563997049326,
+        "base_score": 0.7989035560836499
+      }
+    },
+    {
+      "epoch": 10,
+      "alpha": [
+        1.9000002145767212,
+        1.9500001668930054,
+        1.0
+      ],
+      "reason": "Off-target metrics: precision_c1, f1_c0",
+      "old_alpha": [
+        1.8000001907348633,
+        1.8500001430511475,
+        1.0
+      ],
+      "metrics": {
+        "recall_c2": 0.9969589457678661,
+        "precision_c1": 0.6882307092751364,
+        "f1_c0": 0.6685118160527996,
+        "custom_score": 0.826163095654784,
+        "critical_misclass_rate": 0.003333888981496916,
+        "false_alarm_rate": 0.0031671945324220703,
+        "missed_threat_rate": 0.0001666944490748458,
+        "penalty_factor": 0.9851094764157614,
+        "base_score": 0.8386510488770339
+      }
+    },
+    {
+      "epoch": 11,
+      "alpha": [
+        2.000000238418579,
+        2.0500001907348633,
+        1.0
+      ],
+      "reason": "Off-target metrics: precision_c1, f1_c0",
+      "old_alpha": [
+        1.9000002145767212,
+        1.9500001668930054,
+        1.0
+      ],
+      "metrics": {
+        "recall_c2": 0.9903699949315763,
+        "precision_c1": 0.555984555984556,
+        "f1_c0": 0.4636220472440945,
+        "custom_score": 0.7535733767431451,
+        "critical_misclass_rate": 0.0003333888981496916,
+        "false_alarm_rate": 0.0003333888981496916,
+        "missed_threat_rate": 0.0,
+        "penalty_factor": 0.9985008747708498,
+        "base_score": 0.7547047737099738
+      }
+    },
+    {
+      "epoch": 12,
+      "alpha": [
+        2.1000001430511475,
+        2.1500000953674316,
+        1.0
+      ],
+      "reason": "Off-target metrics: precision_c1, f1_c0",
+      "old_alpha": [
+        2.000000238418579,
+        2.0500001907348633,
+        1.0
+      ],
+      "metrics": {
+        "recall_c2": 0.9959452610238216,
+        "precision_c1": 0.5613368780858337,
+        "f1_c0": 0.486502699460108,
+        "custom_score": 0.7489244062444705,
+        "critical_misclass_rate": 0.004334055675945991,
+        "false_alarm_rate": 0.004334055675945991,
+        "missed_threat_rate": 0.0,
+        "penalty_factor": 0.9806857074236428,
+        "base_score": 0.7636742338296825
+      }
+    },
+    {
+      "epoch": 13,
+      "alpha": [
+        2.200000047683716,
+        2.25,
+        1.0
+      ],
+      "reason": "Off-target metrics: precision_c1, f1_c0",
+      "old_alpha": [
+        2.1000001430511475,
+        2.1500000953674316,
+        1.0
+      ],
+      "metrics": {
+        "recall_c2": 0.9858084135833756,
+        "precision_c1": 0.631578947368421,
+        "f1_c0": 0.6431064572425829,
+        "custom_score": 0.8073572795740954,
+        "critical_misclass_rate": 0.0010001666944490749,
+        "false_alarm_rate": 0.000833472245374229,
+        "missed_threat_rate": 0.0001666944490748458,
+        "penalty_factor": 0.9955093630728088,
+        "base_score": 0.8109991824507305
+      }
+    }
+  ],
+  "metric_history": [
+    {
+      "epoch": 4,
+      "metrics": {
+        "recall_c2": 0.9994931576279777,
+        "precision_c1": 0.5394932935916542,
+        "f1_c0": 0.43844961240310076,
+        "custom_score": 0.7260460816252943,
+        "critical_misclass_rate": 0.007001166861143524,
+        "false_alarm_rate": 0.006834472412068678,
+        "missed_threat_rate": 0.0001666944490748458,
+        "penalty_factor": 0.9689858684165682,
+        "base_score": 0.7492844893721052
+      }
+    },
+    {
+      "epoch": 5,
+      "metrics": {
+        "recall_c2": 0.9994931576279777,
+        "precision_c1": 0.5912011863568957,
+        "f1_c0": 0.5778907242693774,
+        "custom_score": 0.780296044529651,
+        "critical_misclass_rate": 0.0035005834305717617,
+        "false_alarm_rate": 0.003333888981496916,
+        "missed_threat_rate": 0.0001666944490748458,
+        "penalty_factor": 0.9843707982343687,
+        "base_score": 0.7926850795749331
+      }
+    },
+    {
+      "epoch": 6,
+      "metrics": {
+        "recall_c2": 0.9994931576279777,
+        "precision_c1": 0.5825166601332811,
+        "f1_c0": 0.526564344746163,
+        "custom_score": 0.7636064211030583,
+        "critical_misclass_rate": 0.004667444574095683,
+        "false_alarm_rate": 0.004500750125020837,
+        "missed_threat_rate": 0.0001666944490748458,
+        "penalty_factor": 0.9792155367377771,
+        "base_score": 0.7798144458032058
+      }
+    },
+    {
+      "epoch": 7,
+      "metrics": {
+        "recall_c2": 0.9979726305119108,
+        "precision_c1": 0.6022146507666098,
+        "f1_c0": 0.5718999175144349,
+        "custom_score": 0.7857356145792143,
+        "critical_misclass_rate": 0.002333722287047841,
+        "false_alarm_rate": 0.0021670278379729954,
+        "missed_threat_rate": 0.0001666944490748458,
+        "penalty_factor": 0.9895532005596147,
+        "base_score": 0.7940306939888254
+      }
+    },
+    {
+      "epoch": 8,
+      "metrics": {
+        "recall_c2": 0.9974657881398885,
+        "precision_c1": 0.6377142857142857,
+        "f1_c0": 0.6332939787485242,
+        "custom_score": 0.8081740120057676,
+        "critical_misclass_rate": 0.002333722287047841,
+        "false_alarm_rate": 0.0021670278379729954,
+        "missed_threat_rate": 0.0001666944490748458,
+        "penalty_factor": 0.9895532005596147,
+        "base_score": 0.8167059755339348
+      }
+    },
+    {
+      "epoch": 9,
+      "metrics": {
+        "recall_c2": 0.9944247339077547,
+        "precision_c1": 0.6104702750665484,
+        "f1_c0": 0.5927505330490405,
+        "custom_score": 0.7959127804953648,
+        "critical_misclass_rate": 0.000833472245374229,
+        "false_alarm_rate": 0.0006667777962993832,
+        "missed_threat_rate": 0.0001666944490748458,
+        "penalty_factor": 0.9962563997049326,
+        "base_score": 0.7989035560836499
+      }
+    },
+    {
+      "epoch": 10,
+      "metrics": {
+        "recall_c2": 0.9969589457678661,
+        "precision_c1": 0.6882307092751364,
+        "f1_c0": 0.6685118160527996,
+        "custom_score": 0.826163095654784,
+        "critical_misclass_rate": 0.003333888981496916,
+        "false_alarm_rate": 0.0031671945324220703,
+        "missed_threat_rate": 0.0001666944490748458,
+        "penalty_factor": 0.9851094764157614,
+        "base_score": 0.8386510488770339
+      }
+    },
+    {
+      "epoch": 11,
+      "metrics": {
+        "recall_c2": 0.9903699949315763,
+        "precision_c1": 0.555984555984556,
+        "f1_c0": 0.4636220472440945,
+        "custom_score": 0.7535733767431451,
+        "critical_misclass_rate": 0.0003333888981496916,
+        "false_alarm_rate": 0.0003333888981496916,
+        "missed_threat_rate": 0.0,
+        "penalty_factor": 0.9985008747708498,
+        "base_score": 0.7547047737099738
+      }
+    },
+    {
+      "epoch": 12,
+      "metrics": {
+        "recall_c2": 0.9959452610238216,
+        "precision_c1": 0.5613368780858337,
+        "f1_c0": 0.486502699460108,
+        "custom_score": 0.7489244062444705,
+        "critical_misclass_rate": 0.004334055675945991,
+        "false_alarm_rate": 0.004334055675945991,
+        "missed_threat_rate": 0.0,
+        "penalty_factor": 0.9806857074236428,
+        "base_score": 0.7636742338296825
+      }
+    },
+    {
+      "epoch": 13,
+      "metrics": {
+        "recall_c2": 0.9858084135833756,
+        "precision_c1": 0.631578947368421,
+        "f1_c0": 0.6431064572425829,
+        "custom_score": 0.8073572795740954,
+        "critical_misclass_rate": 0.0010001666944490749,
+        "false_alarm_rate": 0.000833472245374229,
+        "missed_threat_rate": 0.0001666944490748458,
+        "penalty_factor": 0.9955093630728088,
+        "base_score": 0.8109991824507305
+      }
+    }
+  ]
+}

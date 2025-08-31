@@ -1,0 +1,573 @@
+{
+  "data_path": "../5-Data_Wrangling/combined.json",
+  "test_size": 0.2,
+  "random_seed": 42,
+  "detailed_logging": true,
+  "max_train_samples": null,
+  "enable_dl": true,
+  "architecture_search": false,
+  "adaptive_training": true,
+  "use_class_weights": true,
+      "class_weights": [1, 1, 1],
+  
+  "preprocessing": {
+    "text_cleaning": {
+      "remove_html": true,
+      "normalize_whitespace": true,
+      "remove_special_chars": false
+    },
+    "tokenization": {
+      "max_length": 1024,
+      "padding": "post",
+      "truncation": "post"
+    },
+    "embeddings": {
+      "vocab_size": 20000,
+      "embedding_dim": 256,
+      "max_features": 20000
+    },
+    "augmentation": {
+      "enable": false,
+      "techniques": ["synonym_replacement"]
+    }
+  },
+  
+  "traditional_ml": {
+    "models": [
+      "random_forest",      
+      "logistic_regression",
+      "svm",
+      "naive_bayes",
+      "xgboost"
+    ],
+    "disabled": [
+
+    ],
+    "cv_folds": 4,
+    "n_jobs": -1,
+    "timeout": 1200,
+    "max_depth_grid": [10, 20],
+    "min_samples_split_grid": [2, 5, 10]
+  },
+  
+  "deep_learning": {
+    "models": [
+
+      "cnn",
+      "lstm",
+      "bilstm",
+      "transformer",
+      "hybrid"
+    ],
+    "disabled": [
+    ],
+    "max_epochs": 25,
+    "batch_size": 64,
+    "learning_rate": 0.0005,
+    "loss_function": "focal",
+    "focal_gamma": 3.0,
+            "focal_alpha": [1, 1, 1],
+    "early_stopping_patience": 5,
+    "timeout": 1200,
+    "enable_gpu": true,
+    "mixed_precision": false
+  },
+  
+  "transformers": {
+    "models": [
+      "distilxlm_roberta",
+      "xlm_roberta",
+      "xlm_roberta_large"
+    ],
+    "disabled": [
+      "bert",
+      "bert_large",
+      "distilbert",
+      "roberta",
+      "roberta_large",
+      "albert",
+      "distilroberta"
+    ],
+    "max_epochs": 15,
+    "batch_size": 16,
+    "warmup_ratio": 0.1,
+    "fp16": true,
+    "cv_folds": 3,
+    "tokenizers_parallelism": true,
+    "tokenization_num_proc": 4,
+    "dataloader_num_workers": 4,
+    "dataloader_pin_memory": false,
+    "logging_steps": 50,
+    "early_stopping_patience": 3,
+    "loss_function": "focal",
+    "focal_gamma": 3.0,
+    "focal_alpha": [1, 1, 1]
+  },
+  
+  "model_architectures": {
+    "cnn": {
+      "default_config": {
+        "filters": 128,
+        "kernel_size": 5,
+        "dropout": 0.4,
+        "layers": 2,
+        "l2_reg": 0.01
+      },
+      "search_space": {
+        "filters": [64, 128],
+        "kernel_size": [3, 5, 7],
+        "dropout": [0.2, 0.3, 0.4, 0.5],
+        "layers": [1, 2, 3, 4, 5]
+      }
+    },
+    "lstm": {
+      "default_config": {
+        "units": 256,
+        "layers": 2,
+        "dropout": 0.4,
+        "bidirectional": true,
+        "l2_reg": 0.01
+      },
+      "search_space": {
+        "units": [128, 256, 512],
+        "layers": [2, 3],
+        "dropout": [0.3, 0.4, 0.5],
+        "bidirectional": [true, false]
+      }
+    },
+    "bilstm": {
+      "default_config": {
+        "units": 128,
+        "layers": 2,
+        "dropout": 0.4,
+        "bidirectional": true
+      },
+      "search_space": {
+        "units": [128, 256],
+        "layers": [1, 2],
+        "dropout": [0.2, 0.3]
+      }
+    },
+    "transformer": {
+      "default_config": {
+        "num_heads": 8,
+        "ff_dim": 512,
+        "num_layers": 2,
+        "dropout": 0.1
+      },
+      "search_space": {
+        "num_heads": [4, 8, 16],
+        "ff_dim": [256, 512, 1024],
+        "num_layers": [1, 2, 3, 4, 5],
+        "dropout": [0.1, 0.2, 0.3]
+      }
+    },
+    "hybrid": {
+      "default_config": {
+        "cnn_filters": 128,
+        "cnn_kernel_size": 5,
+        "lstm_units": 128,
+        "dropout": 0.3
+      },
+      "search_space": {
+        "cnn_filters": [64, 128, 256],
+        "cnn_kernel_size": [3, 5, 7],
+        "lstm_units": [64, 128, 256],
+        "dropout": [0.2, 0.3, 0.4]
+      }
+    },
+    "bert": {
+      "default_config": {
+        "model_name": "bert-base-uncased",
+        "max_length": 512,
+        "dropout": 0.1,
+        "learning_rate": 3e-5
+      },
+      "search_space": {
+        "model_name": ["bert-base-uncased", "bert-base-cased"],
+        "max_length": [256, 512],
+        "dropout": [0.1, 0.2, 0.3],
+        "learning_rate": [2e-5, 3e-5, 4e-5, 5e-5]
+      }
+    },
+    "distilbert": {
+      "default_config": {
+        "model_name": "distilbert-base-uncased",
+        "max_length": 1024,
+        "dropout": 0.2,
+        "learning_rate": 1e-05
+      },
+      "search_space": {
+        "model_name": ["distilbert-base-uncased", "distilbert-base-cased"],
+        "max_length": [256, 512],
+        "dropout": [0.1, 0.2, 0.3],
+        "learning_rate": [2e-5, 3e-5, 4e-5, 5e-5]
+      }
+    },
+    "roberta": {
+      "default_config": {
+        "model_name": "roberta-base",
+        "max_length": 512,
+        "dropout": 0.1,
+        "learning_rate": 3e-5
+      },
+      "search_space": {
+        "model_name": ["roberta-base"],
+        "max_length": [256, 512],
+        "dropout": [0.1, 0.2, 0.3],
+        "learning_rate": [2e-5, 3e-5, 4e-5, 5e-5]
+      }
+    },
+    "albert": {
+      "default_config": {
+        "model_name": "albert-base-v2",
+        "max_length": 512,
+        "dropout": 0.1,
+        "learning_rate": 3e-5
+      },
+      "search_space": {
+        "model_name": ["albert-base-v2"],
+        "max_length": [256, 512],
+        "dropout": [0.1, 0.2, 0.3],
+        "learning_rate": [2e-5, 3e-5, 4e-5, 5e-5]
+      }
+    },
+    "distilroberta": {
+      "default_config": {
+        "model_name": "distilroberta-base",
+        "max_length": 512,
+        "dropout": 0.1,
+        "learning_rate": 3e-5
+      },
+      "search_space": {
+        "model_name": ["distilroberta-base"],
+        "max_length": [256, 512],
+        "dropout": [0.1, 0.2, 0.3],
+        "learning_rate": [2e-5, 3e-5, 4e-5, 5e-5]
+      }
+    },
+    "distilxlm_roberta": {
+      "default_config": {
+        "model_name": "distilxlm-roberta-base",
+        "max_length": 512,
+        "dropout": 0.1,
+        "learning_rate": 3e-5
+      },
+      "search_space": {
+        "model_name": ["distilxlm-roberta-base"],
+        "max_length": [256, 512],
+        "dropout": [0.1, 0.2, 0.3],
+        "learning_rate": [2e-5, 3e-5, 4e-5, 5e-5]
+      }
+    },
+    "xlm_roberta": {
+      "default_config": {
+        "model_name": "xlm-roberta-base",
+        "max_length": 512,
+        "dropout": 0.1,
+        "learning_rate": 3e-5
+      },
+      "search_space": {
+        "model_name": ["xlm-roberta-base"],
+        "max_length": [256, 512],
+        "dropout": [0.1, 0.2, 0.3],
+        "learning_rate": [2e-5, 3e-5, 4e-5, 5e-5]
+      }
+    },
+    "xlm_roberta_large": {
+      "default_config": {
+        "model_name": "xlm-roberta-large",
+        "max_length": 512,
+        "dropout": 0.1,
+        "learning_rate": 2e-5
+      },
+      "search_space": {
+        "model_name": ["xlm-roberta-large"],
+        "max_length": [256, 512],
+        "dropout": [0.1, 0.2, 0.3],
+        "learning_rate": [1e-5, 2e-5, 3e-5]
+      }
+    }
+  },
+  
+  "training_callbacks": {
+    "early_stopping": {
+      "patience": 3,
+      "restore_best_weights": true,
+      "monitor": "val_custom_score",
+      "min_delta": 0.005
+    },
+    "learning_rate_scheduler": {
+      "factor": 0.5,
+      "patience": 3,
+      "min_lr": 1e-7
+    },
+    "model_checkpoint": {
+      "save_best_only": true,
+      "monitor": "val_custom_score"
+    }
+  },
+  
+  "experiment_tracking": {
+    "enable_mlflow": false,
+    "enable_wandb": false,
+    "enable_ray": false,
+    "tracking_uri": "sqlite:///mlruns.db",
+    "experiment_name": "prompt_classification",
+    "model_registry_name": "prompt_classifier"
+  },
+  
+  "data_validation": {
+    "enable_validation": false,
+    "validators": ["schema", "quality", "length"],
+    "validation_config": {
+      "length_validation": {
+        "short_threshold": 5,
+        "long_threshold": 1000,
+        "max_short_ratio": 0.05,
+        "max_long_ratio": 0.05
+      },
+      "text_validation": {
+        "min_length": 1,
+        "max_length": 10000,
+        "required_fields": ["user_message", "classification"],
+        "allowed_classifications": ["0", "1", "2"]
+      },
+      "data_quality": {
+        "missing_threshold": 0.05,
+        "duplicate_threshold": 0.25,
+        "class_balance_threshold": 0.1
+      },
+      "drift_detection": {
+        "enabled": true,
+        "reference_data_path": null,
+        "drift_threshold": 0.05
+      }
+    }
+  },
+  
+  "distributed_training": {
+    "enable_distributed": false,
+    "strategy": "mirrored",
+    "num_workers": 4,
+    "batch_size_per_replica": 32
+  },
+  
+  "hyperparameter_optimization": {
+    "enable_optuna": false,
+    "num_trials": 3,
+    "timeout": 1800,
+    "search_spaces": {
+      "logistic_regression": {
+        "C": {"type": "float", "low": 0.1, "high": 10.0, "log": true},
+        "penalty": {"type": "categorical", "choices": ["l1", "l2", "elasticnet"]}
+      },
+      "random_forest": {
+        "n_estimators": {"type": "int", "low": 50, "high": 300},
+        "max_depth": {"type": "int", "low": 3, "high": 20},
+        "min_samples_split": {"type": "int", "low": 2, "high": 20}
+      }
+    }
+  },
+  
+  "model_serving": {
+    "enable_bentoml": false,
+    "service_name": "prompt_classifier",
+    "api_type": "rest",
+    "max_batch_size": 100,
+    "timeout": 30
+  },
+  
+  "monitoring": {
+    "enable_prometheus": false,
+    "metrics_port": 8000,
+    "health_check_interval": 60,
+    "performance_thresholds": {
+      "accuracy": 0.8,
+      "latency": 1000,
+      "throughput": 100
+    }
+  },
+  
+  "security": {
+    "enable_input_validation": true,
+    "max_input_length": 1000,
+    "allowed_characters": "utf-8",
+    "rate_limiting": {
+      "enabled": false,
+      "requests_per_minute": 100
+    }
+  },
+  
+  "transformer_training": {
+    "early_stopping_patience": 3
+  },
+  
+  "model_evaluation": {
+    "enable_cross_validation": true,
+    "cv_folds": 4,
+    "stratified_sampling": true,
+    "metrics": ["accuracy", "precision_macro", "recall_macro", "f1_macro", "roc_auc"],
+    "confidence_intervals": true,
+    "statistical_significance_test": true,
+    "baseline_model": "majority_class",
+    "performance_thresholds": {
+      "min_accuracy": 0.7,
+      "min_f1": 0.6,
+      "max_latency_ms": 100
+    }
+  },
+  
+  "model_selection": {
+    "selection_strategy": "multi_criteria",
+    "criteria": {
+      "performance_weight": 0.6,
+      "efficiency_weight": 0.2,
+      "interpretability_weight": 0.1,
+      "robustness_weight": 0.1
+    },
+    "ensemble_methods": {
+      "enable_voting": true,
+      "enable_stacking": true,
+      "enable_blending": false,
+      "voting_strategy": "soft"
+    },
+    "feature_importance": {
+      "enable_shap": true,
+      "enable_permutation": true,
+      "top_features": 20
+    }
+  },
+  
+  "a_b_testing": {
+    "enable_ab_testing": false,
+    "test_duration_days": 14,
+    "traffic_split": {
+      "control": 0.5,
+      "treatment": 0.5
+    },
+    "success_metrics": ["accuracy", "user_satisfaction", "response_time"],
+    "statistical_power": 0.8,
+    "significance_level": 0.05,
+    "minimum_sample_size": 1000
+  },
+  
+  "model_deployment": {
+    "deployment_strategy": "blue_green",
+    "rollback_threshold": 0.05,
+    "health_check_endpoint": "/health",
+    "model_versioning": {
+      "enable_semantic_versioning": true,
+      "version_format": "major.minor.patch",
+      "changelog_required": true
+    },
+    "containerization": {
+      "enable_docker": false,
+      "base_image": "python:3.9-slim",
+      "expose_port": 8080
+    },
+    "kubernetes": {
+      "enable_k8s": false,
+      "replicas": 3,
+      "resource_limits": {
+        "cpu": "1000m",
+        "memory": "2Gi"
+      }
+    }
+  },
+  
+  "error_handling": {
+    "retry_policy": {
+      "max_retries": 3,
+      "backoff_factor": 2,
+      "retry_on_exceptions": ["ConnectionError", "TimeoutError"]
+    },
+    "circuit_breaker": {
+      "enable": true,
+      "failure_threshold": 5,
+      "recovery_timeout": 60
+    },
+    "fallback_strategy": {
+      "enable_fallback": true,
+      "fallback_model": "baseline_classifier",
+      "graceful_degradation": true
+    }
+  },
+  
+  "performance_optimization": {
+    "model_compression": {
+      "enable_quantization": false,
+      "enable_pruning": false,
+      "target_size_mb": 100
+    },
+    "caching": {
+      "enable_prediction_cache": true,
+      "cache_ttl_seconds": 3600,
+      "max_cache_size": 10000
+    },
+    "batch_processing": {
+      "enable_batching": true,
+      "max_batch_size": 32,
+      "max_wait_time_ms": 100
+    }
+  },
+  
+  "compliance": {
+    "data_privacy": {
+      "enable_gdpr_compliance": false,
+      "data_retention_days": 90,
+      "enable_data_anonymization": false
+    },
+    "model_fairness": {
+      "enable_fairness_testing": true,
+      "protected_attributes": ["gender", "age", "location"],
+      "fairness_metrics": ["demographic_parity", "equalized_odds"]
+    },
+    "audit_trail": {
+      "enable_audit_logging": true,
+      "log_predictions": true,
+      "log_model_changes": true
+    }
+  },
+  
+  "documentation": {
+    "model_cards": {
+      "enable_model_cards": true,
+      "include_metadata": true,
+      "include_performance": true,
+      "include_fairness": true
+    },
+    "api_documentation": {
+      "enable_swagger": true,
+      "include_examples": true,
+      "include_error_codes": true
+    }
+  },
+  
+  "external_validation": {
+    "enable": true,
+    "data_path": "validation_jsons/outside_test_data.json"
+  },
+  
+  "adaptive_objectives": {
+    "metric_weights": {
+      "recall_c2": 0.50,
+      "precision_c1": 0.30,
+      "f1_c0": 0.20,
+      "critical_penalty": 1.00
+    },
+    "targets": {
+      "recall_c2": 0.95,
+      "precision_c1": 0.80,
+      "f1_c0": 0.75,
+      "false_alarm_rate": 0.02,
+      "missed_threat_rate": 0.02
+    },
+    "adaptation": {
+      "alpha_step": 0.1,
+      "alpha_min": 0.5,
+      "alpha_max": 3.0,
+      "patience": 2
+    }
+  }
+} 

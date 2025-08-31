@@ -21,6 +21,7 @@ from sklearn.preprocessing import label_binarize
 import xgboost as xgb
 import joblib
 import csv
+from utils.csv_utils import assert_and_write
 import signal
 from sklearn.utils.class_weight import compute_class_weight
 import json
@@ -30,6 +31,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # -- Custom metrics (import after path adjustment) --
 from utils.metrics import compute_custom_metrics, sklearn_custom_scorer
+from utils.plot_utils import save_confusion_matrix
 
 from config.config import load_config
 from utils.sanitizer import escape_for_logging
@@ -222,6 +224,11 @@ def train_single_model(model_name, X_train, y_train, X_test, y_test, config, ext
     
     # Custom per-class metrics
     custom_metrics = compute_custom_metrics(y_test, y_pred)
+    # Save confusion matrix
+    try:
+        save_confusion_matrix(model_name, y_test, y_pred)
+    except Exception as cm_err:
+        logging.warning(f"[{model_name}] Failed to save confusion matrix: {cm_err}")
     logging.info(
         f"Custom metrics – recall_c2: {custom_metrics['recall_c2']:.3f}, "
         f"precision_c1: {custom_metrics['precision_c1']:.3f}, f1_c0: {custom_metrics['f1_c0']:.3f}"
@@ -291,7 +298,7 @@ def train_and_evaluate_models(data_dict, config, ext_data=None):
             # Save results to CSV
             with open(results_path, mode='a', newline='') as f:
                 writer = csv.writer(f)
-                writer.writerow([
+                assert_and_write(writer,[
                     model_name,
                     f"{result['precision']:.4f}",
                     f"{result['recall']:.4f}",
@@ -306,6 +313,7 @@ def train_and_evaluate_models(data_dict, config, ext_data=None):
                     f"{result['custom_score']:.4f}",
                     f"{result['false_alarm_rate']:.4f}",
                     f"{result['missed_threat_rate']:.4f}",
+                    str(config.get('class_weights', [1, 1, 1])),  # Traditional ML uses fixed weights
                     f"{result['class_f1']}"
                 ])
             
@@ -326,13 +334,14 @@ def train_and_evaluate_models(data_dict, config, ext_data=None):
             # Log failure to CSV
             with open(results_path, mode='a', newline='') as f:
                 writer = csv.writer(f)
-                writer.writerow([
+                assert_and_write(writer,[
                     model_name,
                     '0','0','0','0',
                     '{}',
                     f'error: {str(e)}',
-                    'nan','0','0','0','0','{}',
-                    '0','0','0',
+                    'nan','0','0','0','0',
+                    '0','0',
+                    str(config.get('class_weights', [1, 1, 1])),
                     '{}'
                 ])
     
