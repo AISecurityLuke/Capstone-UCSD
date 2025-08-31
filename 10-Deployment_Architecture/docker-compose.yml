@@ -1,0 +1,18 @@
+version: "3.9"
+services:
+  api:
+    build: .
+    image: prompt-filter:dev
+    ports:
+      - "8000:8000"
+    environment:
+      - MODEL_PATH=/app/models/best
+      - SUSPICIOUS_PASS_THRESHOLD=0.4
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1g
+        reservations:
+          cpus: "0.5"
+          memory: 512m

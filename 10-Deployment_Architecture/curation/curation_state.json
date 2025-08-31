@@ -1,0 +1,9 @@
+{
+	"classes": {
+		"0": {"last_retrain_idx": 0, "next_start_idx": 0, "replacements_in_window": 0},
+		"1": {"last_retrain_idx": 0, "next_start_idx": 0, "replacements_in_window": 0},
+		"2": {"last_retrain_idx": 0, "next_start_idx": 0, "replacements_in_window": 0}
+	},
+	"window_max": 10050,
+	"window_start_timestamp": "2025-08-30T00:00:00Z"
+}
