@@ -29,6 +29,8 @@ graph TD
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt httpx
 ```
+
+For a step-by-step, see QUICKSTART_AND_USAGE.md in this folder.
 2) Start API (optional env):
 ```
 # Optional: export HF_MODEL_ID=distilroberta-base
@@ -55,6 +57,9 @@ curl -s -X POST localhost:8000/gateway -H 'Content-Type: application/json' -d '{
 
 ## Notes
 - Model service will use stub unless `HF_MODEL_ID` is set to a valid HF model id.
+
+## See also
+- QUICKSTART_AND_USAGE.md for a full, copy/paste run guide
 
 ## Curation API
 - POST `/ingest` `{ "prompt": string }`
@@ -101,3 +106,10 @@ Quickstart in notebook:
 1) Run labeling in `/ui` or `/reviewer`
 2) Open the notebook and run all cells
 3) Use the produced `replace.cleaned.json` to feed your retraining pipeline
+
+
+
+### External Docs
+- Slides/Supporting doc: [Google Doc](https://docs.google.com/document/d/1XR2jrcj17HJbwI5lyBWgFgL517oNfUaZQqr605-QXXA/edit?tab=t.0)
+
+
