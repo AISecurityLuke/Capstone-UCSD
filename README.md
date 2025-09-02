@@ -90,4 +90,6 @@ All are saved to:
 - If large model artifacts are committed, use Git LFS or keep them outside the repo.
 - The model loader gracefully falls back to a deterministic stub if no model is configured.
 
-
+### External Docs
+- Slides/Supporting doc: [Google Doc](https://docs.google.com/document/d/1XR2jrcj17HJbwI5lyBWgFgL517oNfUaZQqr605-QXXA/edit?tab=t.0)
+- Step 10 – Deployment Architecture (Google Doc): [Link](https://docs.google.com/document/d/199UTvpOHjqiwnlPuibljDTAG5V9u6j6OfCBQuk_0fDw/edit?tab=t.0)
