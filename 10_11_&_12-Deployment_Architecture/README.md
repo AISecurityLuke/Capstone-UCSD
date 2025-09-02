@@ -110,6 +110,6 @@ Quickstart in notebook:
 
 
 ### External Docs
-- Slides/Supporting doc: [Google Doc](https://docs.google.com/document/d/1XR2jrcj17HJbwI5lyBWgFgL517oNfUaZQqr605-QXXA/edit?tab=t.0)
-
-
+[Google Doc](https://docs.google.com/document/d/1XR2jrcj17HJbwI5lyBWgFgL517oNfUaZQqr605-QXXA/edit?tab=t.0)
+[Google Doc](https://docs.google.com/document/d/199UTvpOHjqiwnlPuibljDTAG5V9u6j6OfCBQuk_0fDw/edit?tab=t.0)
+[Google Doc](https://docs.google.com/document/d/11kDku8-Ut-GFlzZmbVj49Fu4gu7krxlDWuOlaZcamB4/edit?tab=t.0)
